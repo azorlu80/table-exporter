@@ -1,6 +1,49 @@
 const { ipcRenderer } = require('electron');
 const { extractionScript } = require('./utils/tableExtractorAdvanced');
 
+// ========================================
+// I18N (INTERNATIONALIZATION)
+// ========================================
+
+/**
+ * Current language (fetched from main process)
+ * @type {string}
+ */
+let currentLanguage = 'en';
+
+/**
+ * Get translation from main process
+ * @param {string} key - Translation key
+ * @returns {Promise<string>} Translated text
+ */
+async function t(key) {
+    return new Promise((resolve) => {
+        ipcRenderer.send('get-translation', key);
+        ipcRenderer.once('get-translation-reply', (_event, data) => {
+            resolve(data.translation);
+        });
+    });
+}
+
+/**
+ * Initialize language - fetch from main process
+ */
+async function initLanguage() {
+    return new Promise((resolve) => {
+        ipcRenderer.send('get-language');
+        ipcRenderer.once('get-language-reply', (_event, data) => {
+            currentLanguage = data.language;
+            console.log('🌍 Language initialized:', currentLanguage);
+            resolve(currentLanguage);
+        });
+    });
+}
+
+// Initialize language on load
+initLanguage().then(() => {
+    console.log('✅ i18n ready, language:', currentLanguage);
+});
+
 // Elements
 const webview = document.getElementById('webview');
 const urlInput = document.getElementById('urlInput');

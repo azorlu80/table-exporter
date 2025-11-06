@@ -590,7 +590,7 @@
     <div class="toolbar">
         <h1>
             <span class="logo">📊</span>
-            <span>Universal Table Exporter</span>
+            <span data-i18n="app.title">Universal Table Exporter</span>
         </h1>
 
         <input type="text" class="url-input" id="urlInput"
@@ -601,19 +601,19 @@
             <button class="btn" onclick="navigateToUrl()">
                 <span>🔄</span> Git
             </button>
-            <button class="btn" onclick="goBack()">
-                <span>◀</span>
+            <button class="btn" onclick="goBack()" data-i18n="nav.back">
+                <span>◀</span> Geri
             </button>
-            <button class="btn" onclick="goForward()">
-                <span>▶</span>
+            <button class="btn" onclick="goForward()" data-i18n="nav.forward">
+                <span>▶</span> İleri
             </button>
-            <button class="btn" onclick="reloadPage()">
+            <button class="btn" onclick="reloadPage()" data-i18n="nav.refresh">
                 <span>↻</span> Yenile
             </button>
 
             <!-- Export Tools Dropdown -->
             <div class="export-dropdown">
-                <button class="btn btn-primary" onclick="showTableSelection()" id="exportBtn">
+                <button class="btn btn-primary" onclick="showTableSelection()" id="exportBtn" data-i18n="export.main">
                     <span>📊</span> Tablo Export
                 </button>
                 <button class="btn btn-secondary dropdown-toggle" onclick="toggleToolsMenu()" id="toolsToggle">
@@ -780,10 +780,56 @@
     <div class="status-bar">
         <div class="status-indicator">
             <div class="status-dot" id="statusDot"></div>
-            <span id="statusText">Hazır</span>
+            <span id="statusText" data-i18n="status.ready">Hazır</span>
         </div>
         <div id="urlDisplay"></div>
     </div>
+
+    <!-- i18n Initialization Script -->
+    <script>
+        /**
+         * Translate all elements with data-i18n attribute
+         * Called after language is initialized in renderer.js
+         */
+        async function translateUI() {
+            const elements = document.querySelectorAll('[data-i18n]');
+
+            for (const element of elements) {
+                const key = element.getAttribute('data-i18n');
+
+                // Get translation via IPC (defined in renderer.js)
+                const translation = await t(key);
+
+                // Update text content
+                if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
+                    element.placeholder = translation;
+                } else {
+                    // Preserve existing icons/emojis
+                    const icon = element.querySelector('span');
+                    if (icon) {
+                        element.innerHTML = '';
+                        element.appendChild(icon);
+                        element.appendChild(document.createTextNode(' ' + translation));
+                    } else {
+                        element.textContent = translation;
+                    }
+                }
+            }
+
+            console.log('✅ UI translated to:', currentLanguage);
+        }
+
+        // Auto-translate when language is ready
+        window.addEventListener('DOMContentLoaded', () => {
+            // Wait for language initialization
+            const checkLanguageReady = setInterval(() => {
+                if (typeof currentLanguage !== 'undefined' && currentLanguage) {
+                    clearInterval(checkLanguageReady);
+                    translateUI();
+                }
+            }, 100);
+        });
+    </script>
 
     <script src="src/renderer.js"></script>
 </body>

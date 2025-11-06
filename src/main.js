@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const Logger = require('./utils/logger');
+const { t, getCurrentLanguage } = require('./utils/i18n');
 
 const logger = new Logger('Main');
 let mainWindow;
@@ -18,7 +19,7 @@ function createWindow() {
             height: 900,
             minWidth: 1000,
             minHeight: 600,
-            title: 'Universal Table Exporter',
+            title: t('app.title'),
             webPreferences: {
                 nodeIntegration: true,
                 contextIsolation: false,
@@ -250,6 +251,40 @@ ipcMain.on('log-info', (_event, message) => {
             errorMessage: error.message,
             originalMessage: message
         });
+    }
+});
+
+// i18n - Get current language
+ipcMain.on('get-language', (event) => {
+    try {
+        const language = getCurrentLanguage();
+        logger.debug(`Language requested: ${language}`);
+        event.reply('get-language-reply', { language });
+    } catch (error) {
+        console.error('❌ GET LANGUAGE ERROR:', {
+            errorMessage: error.message,
+            stack: error.stack?.split('\n')[0]
+        });
+
+        logger.error('Language request failed', error);
+        event.reply('get-language-reply', { language: 'en' });
+    }
+});
+
+// i18n - Get translation
+ipcMain.on('get-translation', (event, key) => {
+    try {
+        const translation = t(key);
+        event.reply('get-translation-reply', { key, translation });
+    } catch (error) {
+        console.error('❌ GET TRANSLATION ERROR:', {
+            errorMessage: error.message,
+            key,
+            stack: error.stack?.split('\n')[0]
+        });
+
+        logger.error('Translation request failed', error, { key });
+        event.reply('get-translation-reply', { key, translation: key });
     }
 });
 

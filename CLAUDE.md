@@ -1375,6 +1375,330 @@ tablo_exporter/
 
 ---
 
+### KURAL 27: ÇOKLU DİL DESTEĞİ (i18n - Internationalization)
+
+**⚠️ Open-Source Projeler İçin KRİTİK!**
+
+**ZORUNLU DURUM:** GitHub'a koyacaksan MUTLAKA Türkçe + İngilizce!
+
+---
+
+#### 1️⃣ **NE ZAMAN i18n EKLE?**
+
+```javascript
+// ✅ i18n EKLE:
+- GitHub'a açık kaynak olarak koyulacaksa
+- Uluslararası kullanıcı hedefleniyorsa
+- Desktop/mobile app (birden fazla dilde kullanılabilir)
+
+// ❌ i18n GEREKSİZ:
+- Sadece tek şirket/kurum kullanacaksa
+- Local/internal tool
+- Prototype/demo
+```
+
+---
+
+#### 2️⃣ **YAPILANDIRMA: Automatic OS-Based Detection**
+
+**✅ EN İYİ YÖNTEM - Electron Apps:**
+
+```javascript
+// src/utils/i18n.js
+
+const { app } = require('electron');
+
+const translations = {
+    tr: {
+        'app.title': 'Evrensel Tablo Dışa Aktarıcı',
+        'button.export': 'Export Et'
+    },
+    en: {
+        'app.title': 'Universal Table Exporter',
+        'button.export': 'Export'
+    }
+};
+
+let currentLanguage = 'en';
+
+function detectLanguage() {
+    const locale = app.getLocale(); // "tr", "tr-TR", "en-US"
+    const baseLang = locale.split('-')[0].toLowerCase();
+
+    currentLanguage = translations[baseLang] ? baseLang : 'en';
+    return currentLanguage;
+}
+
+function t(key) {
+    return translations[currentLanguage]?.[key] || key;
+}
+
+detectLanguage(); // Auto-detect on load
+
+module.exports = { t, detectLanguage };
+```
+
+**Main Process (src/main.js):**
+```javascript
+const { t } = require('./utils/i18n');
+
+mainWindow = new BrowserWindow({
+    title: t('app.title'),  // Auto-translated based on OS
+    // ...
+});
+```
+
+**Renderer Process (src/renderer.js):**
+```javascript
+// IPC communication to get translations
+async function t(key) {
+    return new Promise((resolve) => {
+        ipcRenderer.send('get-translation', key);
+        ipcRenderer.once('get-translation-reply', (_event, data) => {
+            resolve(data.translation);
+        });
+    });
+}
+
+// Usage:
+const buttonText = await t('button.export');
+```
+
+**HTML (index.html):**
+```html
+<!-- Use data-i18n attribute -->
+<h1>
+    <span data-i18n="app.title">Universal Table Exporter</span>
+</h1>
+
+<button data-i18n="button.export">Export</button>
+
+<script>
+    async function translateUI() {
+        const elements = document.querySelectorAll('[data-i18n]');
+        for (const el of elements) {
+            const key = el.getAttribute('data-i18n');
+            el.textContent = await t(key);
+        }
+    }
+</script>
+```
+
+---
+
+#### 3️⃣ **ALTERNATİF YÖNTEMLER**
+
+**A) English Only + README.tr.md (Basit Projeler)**
+
+```bash
+# Sadece README'yi çevir, UI İngilizce kalsın
+project/
+├── README.md          # English (primary)
+├── README.tr.md       # Turkish translation
+└── src/               # UI: English only
+```
+
+**B) Manual Language Toggle (Web Apps)**
+
+```html
+<!-- Language selector dropdown -->
+<select onchange="changeLanguage(this.value)">
+    <option value="en">English</option>
+    <option value="tr">Türkçe</option>
+</select>
+
+<script>
+    function changeLanguage(lang) {
+        localStorage.setItem('language', lang);
+        location.reload();
+    }
+</script>
+```
+
+---
+
+#### 4️⃣ **BEST PRACTICES**
+
+**✅ YAPILANDIR:**
+
+```javascript
+// ✅ Centralized translations file
+src/utils/i18n.js  // Tek dosyada tüm çeviriler
+
+// ✅ Structured keys (nested)
+{
+    'button.export': 'Export',
+    'button.save': 'Save',
+    'error.noTables': 'No tables found',
+    'error.exportFailed': 'Export failed'
+}
+
+// ✅ Fallback to English
+if (!translations[lang]) {
+    lang = 'en';  // Always fallback
+}
+
+// ✅ Log language detection
+console.log('🌍 Language detected:', locale);
+```
+
+**❌ YAPMA:**
+
+```javascript
+// ❌ Hardcoded strings scattered everywhere
+alert('Tablo bulunamadı!');  // BAD!
+
+// ❌ Mixed languages in code
+const title = 'Export Table';  // BAD! Use t('button.export')
+
+// ❌ No fallback
+const text = translations[lang][key];  // Throws error if missing!
+```
+
+---
+
+#### 5️⃣ **TRANSLATION DICTIONARY TEMPLATE**
+
+```javascript
+const translations = {
+    tr: {
+        // App
+        'app.title': 'Başlık',
+        'app.description': 'Açıklama',
+
+        // Buttons
+        'button.export': 'Export Et',
+        'button.save': 'Kaydet',
+        'button.cancel': 'İptal',
+
+        // Status
+        'status.ready': 'Hazır',
+        'status.loading': 'Yükleniyor...',
+
+        // Errors
+        'error.noTables': 'Tablo bulunamadı!',
+        'error.exportFailed': 'Export başarısız!'
+    },
+    en: {
+        // App
+        'app.title': 'Title',
+        'app.description': 'Description',
+
+        // Buttons
+        'button.export': 'Export',
+        'button.save': 'Save',
+        'button.cancel': 'Cancel',
+
+        // Status
+        'status.ready': 'Ready',
+        'status.loading': 'Loading...',
+
+        // Errors
+        'error.noTables': 'No tables found!',
+        'error.exportFailed': 'Export failed!'
+    }
+};
+```
+
+---
+
+#### 6️⃣ **COMMIT CHECKLIST**
+
+```bash
+# i18n ekledikten sonra:
+✓ src/utils/i18n.js oluşturuldu
+✓ Main process entegre edildi
+✓ Renderer process entegre edildi
+✓ HTML data-i18n attribute'ları eklendi
+✓ README.md (English) + README.tr.md (optional)
+✓ OS locale detection test edildi
+✓ Fallback to English test edildi
+
+# Test:
+✓ Turkish system → Turkish UI
+✓ English system → English UI
+✓ Other system → English UI (fallback)
+```
+
+---
+
+#### 7️⃣ **WHEN TO ADD LANGUAGE?**
+
+**Priority 1 (MUST):**
+- Turkish (tr) → Native language
+- English (en) → GitHub lingua franca
+
+**Priority 2 (Optional):**
+- Spanish (es) → 2nd most spoken
+- French (fr) → Academic/business
+- German (de) → Europe
+
+**Priority 3 (Advanced):**
+- Chinese (zh) → Asia market
+- Japanese (ja) → Tech community
+- Russian (ru) → Eastern Europe
+
+---
+
+#### 8️⃣ **TOOLS & PACKAGES**
+
+```javascript
+// ✅ Custom i18n (Bu projede kullanılan)
+// - Lightweight
+// - Zero dependency
+// - Perfect for simple apps
+
+// ✅ i18next (Advanced projects)
+npm install i18next
+
+// ✅ react-intl (React apps)
+npm install react-intl
+
+// ❌ OVERKILL for simple apps
+// - Too many dependencies
+// - Complicated setup
+```
+
+---
+
+#### 9️⃣ **README TEMPLATE**
+
+```markdown
+# 🌍 Multi-Language Support
+
+This application automatically detects your system language and displays the interface accordingly.
+
+**Supported Languages:**
+- 🇹🇷 Turkish (Türkçe) - Native
+- 🇺🇸 English - Default
+
+**Language Detection:**
+- **Windows:** System locale (Settings → Time & Language)
+- **Linux:** `echo $LANG`
+- **macOS:** System Preferences → Language & Region
+
+**Fallback:** If your language is not supported, the app defaults to English.
+
+---
+
+# 🌍 Çoklu Dil Desteği
+
+Bu uygulama sistem dilinizi otomatik algılar ve arayüzü buna göre gösterir.
+
+**Desteklenen Diller:**
+- 🇹🇷 Türkçe - Ana dil
+- 🇺🇸 İngilizce - Varsayılan
+
+**Dil Algılama:**
+- **Windows:** Sistem dili (Ayarlar → Saat ve Dil)
+- **Linux:** `echo $LANG`
+- **macOS:** Sistem Tercihleri → Dil ve Bölge
+
+**Yedek:** Diliniz desteklenmiyorsa uygulama İngilizce olarak açılır.
+```
+
+---
+
 ## 🎯 ÖZET - Core Principles
 
 **"Test etmeden 'yaptım' deme!"** ← KURAL 9
@@ -1389,6 +1713,7 @@ tablo_exporter/
 **"Commit-by-commit = AI performance!"** ← KURAL 18
 **"Push YASAK! (Kullanıcı talep edene kadar)"** ← KURAL 19
 **"Test scriptleri organize!"** ← KURAL 20
+**"GitHub = Türkçe + İngilizce (OS-based auto)"** ← KURAL 27
 
 ---
 
