@@ -171,16 +171,27 @@ async function showTableSelection() {
 
     } catch (error) {
         hideLoading();
-        console.error('Table selection error:', error);
+
+        // Detaylı error log (sizin için)
+        console.error('❌ TABLE SELECTION ERROR:', {
+            errorMessage: error.message,
+            errorName: error.name,
+            errorCode: error.code,
+            stack: error.stack?.split('\n').slice(0, 3).join('\n'),
+            pageUrl: webview.getURL(),
+            timestamp: new Date().toISOString()
+        });
+
         logError('Table selection error', error);
 
+        // User-friendly message (kullanıcı için)
         alert(
-            '❌ Tablo arama sırasında hata oluştu:\\n\\n' +
-            error.message + '\\n\\n' +
+            '❌ Tablo arama sırasında hata oluştu!\\n\\n' +
             'Lütfen:\\n' +
-            '1. Sayfayı yenileyin\\n' +
-            '2. Tekrar deneyin\\n' +
-            '3. Sorun devam ederse konsolu kontrol edin (F12)'
+            '1. Sayfayı yenileyin (🔄 Yenile butonu)\\n' +
+            '2. Tablonun tam yüklenmesini bekleyin\\n' +
+            '3. Tekrar deneyin\\n\\n' +
+            'Sorun devam ederse sistem yöneticisine bildirin.'
         );
 
         setStatus('Hata oluştu', 'ready');
@@ -264,7 +275,7 @@ async function exportTable(table) {
         });
 
         // Cevap dinle
-        ipcRenderer.once('save-csv-reply', (event, response) => {
+        ipcRenderer.once('save-csv-reply', (_event, response) => {
             hideLoading();
 
             if (response.success) {
@@ -292,13 +303,30 @@ async function exportTable(table) {
 
     } catch (error) {
         hideLoading();
-        console.error('Export error:', error);
+
+        // Detaylı error log (sizin için)
+        console.error('❌ EXPORT ERROR:', {
+            errorMessage: error.message,
+            errorName: error.name,
+            errorCode: error.code,
+            stack: error.stack?.split('\n').slice(0, 3).join('\n'),
+            tableTitle: table?.title,
+            tableRows: table?.rowCount,
+            tableCols: table?.columnCount,
+            tableType: table?.type,
+            csvLength: table?.csv?.length,
+            timestamp: new Date().toISOString()
+        });
+
         logError('Export error', error);
 
+        // User-friendly message (kullanıcı için)
         alert(
-            '❌ Export sırasında hata oluştu:\\n\\n' +
-            error.message + '\\n\\n' +
-            'Lütfen tekrar deneyin.'
+            '❌ Tablo export edilemedi!\\n\\n' +
+            'Lütfen:\\n' +
+            '1. Tabloyu görüntülediğinizden emin olun\\n' +
+            '2. Tekrar deneyin\\n\\n' +
+            'Sorun devam ederse sistem yöneticisine bildirin.'
         );
 
         setStatus('Hata oluştu', 'ready');
@@ -319,6 +347,16 @@ function logError(message, error) {
 
 // Global error handler
 window.onerror = function(message, source, lineno, colno, error) {
+    console.error('❌ WINDOW ERROR:', {
+        message,
+        source,
+        lineno,
+        colno,
+        errorMessage: error?.message,
+        stack: error?.stack?.split('\n').slice(0, 3).join('\n'),
+        timestamp: new Date().toISOString()
+    });
+
     logError('Window error', {
         message,
         source,
@@ -327,5 +365,103 @@ window.onerror = function(message, source, lineno, colno, error) {
         error: error ? error.toString() : 'No error'
     });
 };
+
+// Error collection for export (son 50 hata)
+const errorHistory = [];
+const MAX_ERROR_HISTORY = 50;
+
+function addToErrorHistory(errorData) {
+    errorHistory.unshift({
+        ...errorData,
+        timestamp: new Date().toISOString()
+    });
+
+    // Sadece son 50 hatayı tut
+    if (errorHistory.length > MAX_ERROR_HISTORY) {
+        errorHistory.pop();
+    }
+}
+
+// Override console.error to capture all errors
+const originalConsoleError = console.error;
+console.error = function(...args) {
+    // Orijinal console.error'u çağır
+    originalConsoleError.apply(console, args);
+
+    // Eğer ilk argüman object ise, error history'ye ekle
+    if (args[0] && typeof args[0] === 'object') {
+        addToErrorHistory(args[0]);
+    } else if (args[0] && typeof args[0] === 'string' && args[0].startsWith('❌')) {
+        // ❌ ile başlayan error mesajları
+        addToErrorHistory({
+            type: 'console-error',
+            message: args[0],
+            data: args[1]
+        });
+    }
+};
+
+// Gizli hata export özelliği (Ctrl+Shift+E)
+document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.shiftKey && e.key === 'E') {
+        e.preventDefault();
+        exportErrors();
+    }
+});
+
+function exportErrors() {
+    try {
+        if (errorHistory.length === 0) {
+            alert('✅ Hiç hata kaydı yok!\n\nUygulama sorunsuz çalışıyor.');
+            return;
+        }
+
+        // Hata raporunu hazırla
+        const report = {
+            appName: 'Universal Table Exporter',
+            version: '1.0.0',
+            exportDate: new Date().toISOString(),
+            platform: navigator.platform,
+            userAgent: navigator.userAgent,
+            errorCount: errorHistory.length,
+            errors: errorHistory
+        };
+
+        // JSON formatında kaydet
+        const jsonContent = JSON.stringify(report, null, 2);
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+        const filename = `errors_${timestamp}.json`;
+
+        // Main process'e gönder (CSV kaydetme fonksiyonunu kullan)
+        ipcRenderer.send('save-csv', {
+            csv: jsonContent,
+            filename: filename
+        });
+
+        ipcRenderer.once('save-csv-reply', (_event, response) => {
+            if (response.success) {
+                alert(
+                    `✅ Hata raporu kaydedildi!\n\n` +
+                    `📁 Dosya: ${filename}\n` +
+                    `📊 Hata Sayısı: ${errorHistory.length}\n` +
+                    `💾 Boyut: ${response.size} bytes\n\n` +
+                    `📂 Konum:\n${response.path}\n\n` +
+                    `Bu dosyayı sistem yöneticisine gönderin.`
+                );
+
+                console.log('✅ Error report exported:', response.path);
+            } else {
+                alert('❌ Hata raporu kaydedilemedi!\n\n' + (response.error || 'Bilinmeyen hata'));
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ ERROR EXPORT FAILED:', {
+            errorMessage: error.message,
+            stack: error.stack
+        });
+        alert('❌ Hata raporu oluşturulamadı!');
+    }
+}
 
 logInfo('Renderer process started');

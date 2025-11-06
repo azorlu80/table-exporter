@@ -51,7 +51,17 @@ function createWindow() {
         });
 
     } catch (error) {
-        logger.error('Pencere oluşturma hatası', error);
+        console.error('❌ WINDOW CREATION ERROR:', {
+            errorMessage: error.message,
+            errorCode: error.code,
+            stack: error.stack?.split('\n')[0],
+            indexPath: path.join(__dirname, '..', 'index.html')
+        });
+
+        logger.error('Pencere oluşturma hatası', error, {
+            indexPath: path.join(__dirname, '..', 'index.html'),
+            platform: process.platform
+        });
         throw error;
     }
 }
@@ -100,10 +110,23 @@ async function saveCSVFile(csv, filename) {
         };
 
     } catch (error) {
-        logger.error('CSV kaydetme hatası', error);
+        console.error('❌ CSV SAVE ERROR:', {
+            errorMessage: error.message,
+            errorCode: error.code,
+            stack: error.stack?.split('\n')[0],
+            filename,
+            csvLength: csv ? csv.length : 0
+        });
+
+        logger.error('CSV kaydetme hatası', error, {
+            filename,
+            csvLength: csv ? csv.length : 0,
+            operation: 'saveCSVFile'
+        });
+
         return {
             success: false,
-            error: error.message
+            error: error.message || 'CSV dosyası kaydedilemedi'
         };
     }
 }
@@ -166,10 +189,25 @@ ipcMain.on('save-csv', async (event, data) => {
         event.reply('save-csv-reply', result);
 
     } catch (error) {
-        logger.error('CSV kaydetme IPC hatası', error);
+        console.error('❌ IPC SAVE-CSV ERROR:', {
+            errorMessage: error.message,
+            errorCode: error.code,
+            stack: error.stack?.split('\n')[0],
+            hasData: !!data,
+            filename: data?.filename,
+            csvLength: data?.csv?.length || 0
+        });
+
+        logger.error('CSV kaydetme IPC hatası', error, {
+            hasData: !!data,
+            filename: data?.filename,
+            csvLength: data?.csv?.length || 0,
+            operation: 'ipc-save-csv'
+        });
+
         event.reply('save-csv-reply', {
             success: false,
-            error: error.message
+            error: error.message || 'CSV kaydetme işlemi başarısız oldu'
         });
     }
 });
@@ -181,24 +219,37 @@ ipcMain.on('get-table-count', (event) => {
         // Bu bilgi renderer'dan gelecek, sadece log
         event.reply('get-table-count-reply', { received: true });
     } catch (error) {
-        logger.error('Tablo sayısı sorgulama hatası', error);
+        console.error('❌ GET TABLE COUNT ERROR:', {
+            errorMessage: error.message,
+            stack: error.stack?.split('\n')[0]
+        });
+
+        logger.error('Tablo sayısı sorgulama hatası', error, {
+            operation: 'ipc-get-table-count'
+        });
     }
 });
 
 // Hata logları
-ipcMain.on('log-error', (event, data) => {
+ipcMain.on('log-error', (_event, data) => {
     try {
         logger.error('Renderer hatası', new Error(data.message), data);
     } catch (error) {
-        console.error('Log error handler failed:', error);
+        console.error('❌ LOG ERROR HANDLER FAILED:', {
+            errorMessage: error.message,
+            originalData: data
+        });
     }
 });
 
-ipcMain.on('log-info', (event, message) => {
+ipcMain.on('log-info', (_event, message) => {
     try {
         logger.info(`Renderer: ${message}`);
     } catch (error) {
-        console.error('Log info handler failed:', error);
+        console.error('❌ LOG INFO HANDLER FAILED:', {
+            errorMessage: error.message,
+            originalMessage: message
+        });
     }
 });
 
