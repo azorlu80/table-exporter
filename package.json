@@ -1,7 +1,7 @@
 {
-  "name": "hastane-yonetim-sistemi-yardimci-araci",
+  "name": "universal-table-exporter",
   "version": "1.0.0",
-  "description": "Hastane Yönetim Sistemi Yardımcı Aracı - Profesyonel Tablo Export Çözümü",
+  "description": "Universal Table Exporter - Export web tables to CSV/Excel when built-in export fails",
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
@@ -12,12 +12,15 @@
     "pack": "electron-builder --dir"
   },
   "keywords": [
-    "tablo",
+    "table",
     "export",
     "csv",
     "excel",
-    "hastane",
-    "extjs"
+    "extjs",
+    "web-scraping",
+    "data-extraction",
+    "electron",
+    "desktop-app"
   ],
   "author": "Ali",
   "license": "MIT",

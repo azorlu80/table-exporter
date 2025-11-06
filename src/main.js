@@ -18,7 +18,7 @@ function createWindow() {
             height: 900,
             minWidth: 1000,
             minHeight: 600,
-            title: 'Hastane Yönetim Sistemi Yardımcı Aracı',
+            title: 'Universal Table Exporter',
             webPreferences: {
                 nodeIntegration: true,
                 contextIsolation: false,
@@ -26,7 +26,7 @@ function createWindow() {
                 allowRunningInsecureContent: true,
                 webSecurity: false,
                 // Normal tarayıcı gibi davran
-                partition: 'persist:hospital'
+                partition: 'persist:table-exporter'
             }
         });
 
