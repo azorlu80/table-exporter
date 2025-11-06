@@ -41,10 +41,8 @@ package-lock.json
 *.rpm
 *.AppImage
 
-# Test results
-tests/results/*.csv
-tests/results/*.xls
-tests/results/*.xlsx
+# Testing (internal - NOT public!)
+tests/
 
 # Documentation (internal development docs - NOT public!)
 CLAUDE.md
