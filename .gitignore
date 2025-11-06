@@ -45,3 +45,6 @@ package-lock.json
 tests/results/*.csv
 tests/results/*.xls
 tests/results/*.xlsx
+
+# Documentation (internal development docs)
+docs/
