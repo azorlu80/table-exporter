@@ -1699,6 +1699,137 @@ Bu uygulama sistem dilinizi otomatik algılar ve arayüzü buna göre gösterir.
 
 ---
 
+### KURAL 28: README YAZIMI (GitHub için)
+
+**⚠️ ASLA UZUN README YAZMA!**
+
+**ZORUNLU:** GitHub projesi = KISA VE ÖZ README!
+
+---
+
+#### 1️⃣ **README.md (English - Max 100 satır)**
+
+**✅ YAPILANDIR:**
+
+```markdown
+# 📊 Project Name
+
+**One-line description (what it does)**
+
+## Features (5-7 bullet points max)
+- Feature 1
+- Feature 2
+
+## Quick Start (3-5 commands)
+npm install
+npm start
+
+## Usage (3-5 steps)
+1. Step 1
+2. Step 2
+
+## Tech Stack (3-5 items)
+- Tech 1
+- Tech 2
+
+## License
+MIT
+```
+
+**❌ YAPMA:**
+```markdown
+# YANLIŞ: 1000+ satır README
+- 50 feature açıklaması
+- Her fonksiyonun detayı
+- Uzun troubleshooting
+- Architecture diagrams
+```
+
+---
+
+#### 2️⃣ **README.tr.md (Turkish - Opsiyonel)**
+
+**Sadece şunlar gerekirse:**
+- GitHub'a açık kaynak koyulacaksa
+- Türk kullanıcılar hedefleniyorsa
+
+**Yapı:** README.md ile AYNI (çeviri)
+
+---
+
+#### 3️⃣ **BEST PRACTICES**
+
+**✅ KISA README:**
+```markdown
+# Başlık (1 satır)
+Açıklama (2-3 cümle)
+
+## Features (5 bullet point)
+## Quick Start (3 komut)
+## Usage (3-5 adım)
+## License (1 satır)
+
+TOPLAM: 50-100 satır
+```
+
+**❌ UZUN README:**
+```markdown
+# Başlık
+10 paragraf açıklama
+20 feature
+30 screenshot
+Detaylı API docs
+Architecture diagram
+FAQ (50 soru)
+
+TOPLAM: 1000+ satır ❌
+```
+
+---
+
+#### 4️⃣ **GITHUB DESCRIPTION (Repository)**
+
+**Max 160 karakter (Twitter gibi):**
+
+```
+Export web tables to CSV/Excel when built-in export fails. Desktop app with 8 export strategies.
+```
+
+**Formül:**
+```
+[Ne yapar] + [Nasıl yapar] + [Ana özellik]
+```
+
+---
+
+#### 5️⃣ **STRUCTURE TEMPLATE**
+
+```
+project/
+├── README.md          # English (primary) - 50-100 satır
+├── README.tr.md       # Turkish (optional) - 50-100 satır
+├── LICENSE
+└── src/
+```
+
+---
+
+#### 6️⃣ **EMOJI KULLANIMI**
+
+**✅ Az kullan (Her başlıkta 1):**
+```markdown
+## 📦 Installation
+## 🚀 Quick Start
+## 📝 License
+```
+
+**❌ Çok kullanma:**
+```markdown
+## 📦🎉🔥💯 Installation 🚀✨🎯
+```
+
+---
+
 ## 🎯 ÖZET - Core Principles
 
 **"Test etmeden 'yaptım' deme!"** ← KURAL 9
@@ -1714,6 +1845,7 @@ Bu uygulama sistem dilinizi otomatik algılar ve arayüzü buna göre gösterir.
 **"Push YASAK! (Kullanıcı talep edene kadar)"** ← KURAL 19
 **"Test scriptleri organize!"** ← KURAL 20
 **"GitHub = Türkçe + İngilizce (OS-based auto)"** ← KURAL 27
+**"README = KISA VE ÖZ (max 100 satır)"** ← KURAL 28
 
 ---
 

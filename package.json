@@ -1,7 +1,7 @@
 {
-  "name": "universal-table-exporter",
+  "name": "table-exporter",
   "version": "1.0.0",
-  "description": "Universal Table Exporter - Export web tables to CSV/Excel when built-in export fails",
+  "description": "Export web tables to CSV/Excel when built-in export fails",
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
