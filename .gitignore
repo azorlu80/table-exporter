@@ -47,4 +47,6 @@ tests/results/*.xls
 tests/results/*.xlsx
 
 # Documentation (internal development docs)
-docs/
+CLAUDE.md
+docs/MANUAL_TEST*.md
+docs/MANUEL_TEST*.md
