@@ -1,65 +1,60 @@
-# 📊 Table Exporter
+# Table Exporter
 
-**Export web tables to CSV/Excel when built-in export fails.**
+Desktop tool for exporting tables from web applications to CSV/Excel format.
 
-Desktop app that extracts table data from any website, especially useful when native export features are broken.
+## Why?
 
-## ✨ Features
+Many legacy web applications have broken or missing export features. This tool extracts table data directly from the browser DOM and converts it to CSV format.
 
-- 🎯 **Auto-detection** - ExtJS Grid, HTML Table, Div-based grids
-- 🌍 **Multi-language** - Turkish/English (auto-detected from OS)
-- 🛠️ **8 Export Tools** - Multiple fallback strategies
-- 🔐 **Local-only** - No data sent to external servers
-- 💾 **UTF-8 BOM** - Perfect Turkish character support in Excel
+## Features
 
-## 🚀 Quick Start
+- Automatic table detection (ExtJS, HTML tables, div-based grids)
+- Multiple export strategies (8 different methods)
+- Turkish and English interface
+- UTF-8 BOM support for Excel compatibility
+- Session persistence (login once, stays logged in)
+
+## Installation
 
 ```bash
-# Install dependencies
 npm install
-
-# Run application
 npm start
 ```
 
-## 📖 Usage
+## Usage
 
-1. Navigate to your target website
-2. Login (session persists)
-3. Find the table you want to export
-4. Click **"Export Table"** button
-5. If auto-detection fails, try other tools from **▼ menu**
-6. Save as CSV and open in Excel
+1. Open the application
+2. Navigate to your target website
+3. Login if required
+4. Click the "Export Table" button
+5. Select the table from the list
+6. Save as CSV
 
-## 🛠️ Export Tools
+If automatic detection fails, use the dropdown menu (▼) to try alternative methods:
+- Manual selector (click on table)
+- Selection export (copy-paste data)
+- Scan all tables (see what's available)
 
-| Tool | Description |
-|------|-------------|
-| Auto Export | Tries all methods sequentially (recommended) |
-| Manual Selector | Click on table to select |
-| Selection Export | Export selected text (copy-paste) |
-| Scan All Tables | List all tables on page |
-| ExtJS Only | For Sencha ExtJS applications |
-| HTML Only | For standard HTML tables |
-| Div Grid Only | For modern framework tables |
+## Export Methods
 
-## 🌍 Multi-Language
+The tool tries multiple strategies to find tables:
 
-Automatically detects your system language:
-- 🇹🇷 Turkish system → Turkish UI
-- 🇬🇧 English system → English UI
-- 🌐 Others → English UI (default)
+- **ExtJS grids** - Uses `Ext.ComponentQuery`
+- **HTML tables** - Standard `<table>` elements
+- **Div grids** - Modern framework tables (role="grid")
 
-## 📦 Tech Stack
+## Tech Stack
 
-- **Electron** - Desktop framework
-- **Node.js** - Backend runtime
-- **JavaScript** - Pure JS, no frameworks
+Built with Electron and vanilla JavaScript. No frameworks required.
 
-## 📝 License
+## CSV Format
 
-MIT License - see [LICENSE](LICENSE)
+Output files use UTF-8 with BOM encoding, which ensures Turkish characters (ç, ğ, ı, ö, ş, ü) display correctly when opened in Excel.
+
+## License
+
+MIT
 
 ---
 
-🇹🇷 **Türkçe döküman için:** [README.tr.md](README.tr.md)
+**Turkish documentation:** [README.tr.md](README.tr.md)

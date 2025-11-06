@@ -1,65 +1,60 @@
-# 📊 Table Exporter
+# Table Exporter
 
-**Web tablolarını CSV/Excel formatına aktarın.**
+Web uygulamalarından tabloları CSV/Excel formatına aktaran masaüstü aracı.
 
-Herhangi bir web sitesinden tablo verilerini çıkaran masaüstü uygulaması. Özellikle yerleşik export özellikleri çalışmadığında kullanışlıdır.
+## Neden?
 
-## ✨ Özellikler
+Birçok eski web uygulamasında export özelliği bozuk veya eksik. Bu araç, tablo verilerini doğrudan tarayıcı DOM'undan çıkarır ve CSV formatına dönüştürür.
 
-- 🎯 **Otomatik algılama** - ExtJS Grid, HTML Table, Div tabanlı tablolar
-- 🌍 **Çoklu dil** - Türkçe/İngilizce (sistem dilinden otomatik)
-- 🛠️ **8 Export Aracı** - Birden fazla yedek strateji
-- 🔐 **Yerel işlem** - Hiçbir veri dışarı gönderilmez
-- 💾 **UTF-8 BOM** - Excel'de mükemmel Türkçe karakter desteği
+## Özellikler
 
-## 🚀 Hızlı Başlangıç
+- Otomatik tablo algılama (ExtJS, HTML tablolar, div tabanlı gridler)
+- Çoklu export stratejisi (8 farklı yöntem)
+- Türkçe ve İngilizce arayüz
+- UTF-8 BOM desteği (Excel uyumluluğu)
+- Oturum kalıcılığı (bir kez giriş yap, açık kalsın)
+
+## Kurulum
 
 ```bash
-# Bağımlılıkları yükle
 npm install
-
-# Uygulamayı çalıştır
 npm start
 ```
 
-## 📖 Kullanım
+## Kullanım
 
-1. Hedef web sitesine git
-2. Giriş yap (oturum kalıcı)
-3. Export etmek istediğin tabloyu bul
-4. **"Tablo Export"** butonuna tıkla
-5. Otomatik algılama başarısız olursa **▼ menüden** diğer araçları dene
-6. CSV olarak kaydet ve Excel'de aç
+1. Uygulamayı aç
+2. Hedef web sitesine git
+3. Gerekirse giriş yap
+4. "Tablo Export" butonuna tıkla
+5. Listeden tabloyu seç
+6. CSV olarak kaydet
 
-## 🛠️ Export Araçları
+Otomatik algılama başarısız olursa, açılır menüden (▼) alternatif yöntemleri dene:
+- Manuel seçici (tabloya tıkla)
+- Seçim export (kopyala-yapıştır)
+- Tüm tabloları tara (ne var göster)
 
-| Araç | Açıklama |
-|------|----------|
-| Otomatik Export | Tüm yöntemleri sırayla dener (önerilen) |
-| Manuel Seçici | Tabloya tıklayarak seç |
-| Seçim Export | Seçili metni export et (kopyala-yapıştır) |
-| Tüm Tabloları Tara | Sayfadaki tüm tabloları listele |
-| Sadece ExtJS | Sencha ExtJS uygulamaları için |
-| Sadece HTML | Standart HTML tabloları için |
-| Sadece Div Grid | Modern framework tabloları için |
+## Export Yöntemleri
 
-## 🌍 Çoklu Dil
+Araç tabloları bulmak için birden fazla strateji dener:
 
-Sistem dilinizi otomatik algılar:
-- 🇹🇷 Türkçe sistem → Türkçe arayüz
-- 🇬🇧 İngilizce sistem → İngilizce arayüz
-- 🌐 Diğer → İngilizce arayüz (varsayılan)
+- **ExtJS gridler** - `Ext.ComponentQuery` kullanır
+- **HTML tablolar** - Standart `<table>` elementleri
+- **Div gridler** - Modern framework tabloları (role="grid")
 
-## 📦 Teknolojiler
+## Teknolojiler
 
-- **Electron** - Masaüstü framework
-- **Node.js** - Backend runtime
-- **JavaScript** - Saf JS, framework yok
+Electron ve vanilla JavaScript ile geliştirildi. Framework gerektirmez.
 
-## 📝 Lisans
+## CSV Formatı
 
-MIT Lisansı - detaylar için [LICENSE](LICENSE)
+Çıktı dosyaları UTF-8 BOM encoding kullanır, böylece Türkçe karakterler (ç, ğ, ı, ö, ş, ü) Excel'de doğru görünür.
+
+## Lisans
+
+MIT
 
 ---
 
-🇬🇧 **For English documentation:** [README.md](README.md)
+**İngilizce döküman:** [README.md](README.md)
