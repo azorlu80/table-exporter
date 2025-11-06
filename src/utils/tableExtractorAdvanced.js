@@ -51,6 +51,19 @@ const extractionScript = `
                 throw new Error('Grid store veya columns bulunamadı');
             }
 
+            // ✅ BEST PRACTICE: Check pagination status
+            const isPaginated = store.pageSize > 0;
+            const currentCount = store.getCount();
+            const totalCount = store.getTotalCount ? store.getTotalCount() : currentCount;
+
+            // ✅ BEST PRACTICE: Check filter status
+            const filters = store.getFilters ? store.getFilters() : null;
+            const isFiltered = filters && filters.length > 0;
+
+            // ✅ BEST PRACTICE: Check grouping status
+            const groupField = store.groupField || null;
+            const isGrouped = groupField !== null;
+
             const csv = [];
             const headers = [];
             const visibleColumns = [];
@@ -69,21 +82,26 @@ const extractionScript = `
 
             csv.push(headers.join(','));
 
-            // Data rows
-            const records = store.getRange();
+            // ✅ BEST PRACTICE: Use getData().items (respects filters!)
+            // Alternative: store.getRange() also works
+            const records = store.getData ? store.getData().items : store.getRange();
+
             records.forEach(record => {
                 const row = [];
                 visibleColumns.forEach(col => {
                     let value = '';
                     if (col.dataIndex) {
                         value = record.get(col.dataIndex);
+                        // Apply renderer if available
                         if (col.renderer && typeof col.renderer === 'function') {
                             try {
                                 const rendered = col.renderer(value, {}, record);
                                 if (rendered !== undefined && rendered !== null) {
                                     value = rendered;
                                 }
-                            } catch (e) {}
+                            } catch (e) {
+                                // Renderer failed, use raw value
+                            }
                         }
                     }
                     let cellText = Utils.cleanText(String(value || ''));
@@ -93,13 +111,32 @@ const extractionScript = `
                 csv.push(row.join(','));
             });
 
+            // ✅ BEST PRACTICE: Return metadata with warnings
             return {
                 csv: csv.join('\\n'),
                 rowCount: records.length,
                 columnCount: visibleColumns.length,
                 title: grid.title || 'ExtJS Grid ' + (index + 1),
                 type: 'extjs',
-                index: index
+                index: index,
+                // Metadata
+                metadata: {
+                    isPaginated: isPaginated,
+                    isFiltered: isFiltered,
+                    isGrouped: isGrouped,
+                    currentCount: currentCount,
+                    totalCount: totalCount,
+                    groupField: groupField
+                },
+                // Warnings
+                warnings: [
+                    ...(isPaginated && currentCount < totalCount ?
+                        [\`⚠️ Pagination: Exporting \${currentCount} of \${totalCount} rows (current page only)\`] : []),
+                    ...(isFiltered ?
+                        [\`⚠️ Filters active: Exporting \${currentCount} filtered rows\`] : []),
+                    ...(isGrouped ?
+                        [\`⚠️ Grouped by: \${groupField}\`] : [])
+                ]
             };
         }
 
