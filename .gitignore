@@ -1,0 +1,47 @@
+# Node modules
+node_modules/
+
+# Build outputs
+dist/
+build/
+out/
+
+# Electron specific
+*.log
+*.pid
+*.seed
+*.pid.lock
+
+# OS specific
+.DS_Store
+Thumbs.db
+.Spotlight-V100
+.Trashes
+
+# IDE
+.vscode/
+.idea/
+*.sublime-*
+
+# Environment
+.env
+.env.local
+
+# Package locks (keep package.json only)
+package-lock.json
+
+# Temporary files
+*.tmp
+*.temp
+
+# Distribution packages
+*.dmg
+*.exe
+*.deb
+*.rpm
+*.AppImage
+
+# Test results
+tests/results/*.csv
+tests/results/*.xls
+tests/results/*.xlsx

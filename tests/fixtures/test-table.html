@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Tabloları</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        h1 { color: #333; }
+        h2 { color: #666; margin-top: 40px; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        .test-section {
+            background: #f9f9f9;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>📊 Tablo Export Test Sayfası</h1>
+    <p>Bu sayfa farklı tablo yapılarını test etmek için oluşturulmuştur.</p>
+
+    <!-- Test 1: Basit HTML Table -->
+    <div class="test-section">
+        <h2>Test 1: Basit HTML Table</h2>
+        <table id="test-table-1">
+            <thead>
+                <tr>
+                    <th>Hasta No</th>
+                    <th>Ad Soyad</th>
+                    <th>Tarih</th>
+                    <th>Durum</th>
+                    <th>Şikayeti</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>001</td>
+                    <td>Ahmet Yılmaz</td>
+                    <td>2025-01-15</td>
+                    <td>Muayene Edildi</td>
+                    <td>Baş ağrısı ve ateş</td>
+                </tr>
+                <tr>
+                    <td>002</td>
+                    <td>Ayşe Demir</td>
+                    <td>2025-01-15</td>
+                    <td>Taburcu</td>
+                    <td>Boğaz ağrısı</td>
+                </tr>
+                <tr>
+                    <td>003</td>
+                    <td>Mehmet Çelik</td>
+                    <td>2025-01-14</td>
+                    <td>Bekliyor</td>
+                    <td>Kontrole geldi</td>
+                </tr>
+                <tr>
+                    <td>004</td>
+                    <td>Fatma Öztürk</td>
+                    <td>2025-01-14</td>
+                    <td>Muayene Edildi</td>
+                    <td>Mide bulantısı</td>
+                </tr>
+                <tr>
+                    <td>005</td>
+                    <td>Can Şahin</td>
+                    <td>2025-01-13</td>
+                    <td>Taburcu</td>
+                    <td>Göğüs ağrısı</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Test 2: Türkçe Karakter Testi -->
+    <div class="test-section">
+        <h2>Test 2: Türkçe Karakter Testi</h2>
+        <table id="test-table-2">
+            <thead>
+                <tr>
+                    <th>İl</th>
+                    <th>İlçe</th>
+                    <th>Açıklama</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>İstanbul</td>
+                    <td>Şişli</td>
+                    <td>Güzel bir şehir</td>
+                </tr>
+                <tr>
+                    <td>Ankara</td>
+                    <td>Çankaya</td>
+                    <td>Başkent özel ğüzel</td>
+                </tr>
+                <tr>
+                    <td>İzmir</td>
+                    <td>Bornova</td>
+                    <td>Ege'nin incisi</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Test 3: Büyük Tablo (100 satır) -->
+    <div class="test-section">
+        <h2>Test 3: Büyük Tablo (100 Satır)</h2>
+        <table id="test-table-3">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Hasta</th>
+                    <th>Yaş</th>
+                    <th>Cinsiyet</th>
+                    <th>Tanı</th>
+                    <th>Doktor</th>
+                </tr>
+            </thead>
+            <tbody id="big-table-body">
+                <!-- JavaScript ile doldurulacak -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Test 4: Çoklu Tablo (Aynı sayfada 3 tablo) -->
+    <div class="test-section">
+        <h2>Test 4: Çoklu Tablo Testi</h2>
+
+        <h3>Tablo A: Poliklinik</h3>
+        <table>
+            <tr>
+                <th>Branş</th>
+                <th>Hekim</th>
+                <th>Hasta Sayısı</th>
+            </tr>
+            <tr>
+                <td>Dahiliye</td>
+                <td>Dr. Ali Veli</td>
+                <td>45</td>
+            </tr>
+            <tr>
+                <td>Kardiyoloji</td>
+                <td>Dr. Ayşe Yılmaz</td>
+                <td>32</td>
+            </tr>
+        </table>
+
+        <h3>Tablo B: Acil Servis</h3>
+        <table>
+            <tr>
+                <th>Saat</th>
+                <th>Vaka Sayısı</th>
+                <th>Durum</th>
+            </tr>
+            <tr>
+                <td>08:00 - 12:00</td>
+                <td>12</td>
+                <td>Normal</td>
+            </tr>
+            <tr>
+                <td>12:00 - 16:00</td>
+                <td>18</td>
+                <td>Yoğun</td>
+            </tr>
+        </table>
+
+        <h3>Tablo C: Laboratuvar</h3>
+        <table>
+            <tr>
+                <th>Test</th>
+                <th>Tamamlanan</th>
+                <th>Bekleyen</th>
+            </tr>
+            <tr>
+                <td>Kan Tahlili</td>
+                <td>67</td>
+                <td>12</td>
+            </tr>
+            <tr>
+                <td>İdrar Tahlili</td>
+                <td>34</td>
+                <td>5</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Test 5: Özel Karakterler -->
+    <div class="test-section">
+        <h2>Test 5: Özel Karakter Testi</h2>
+        <table>
+            <tr>
+                <th>Karakter</th>
+                <th>Değer</th>
+                <th>Açıklama</th>
+            </tr>
+            <tr>
+                <td>Tırnak "test"</td>
+                <td>Virgül, test</td>
+                <td>Alt çizgi_test</td>
+            </tr>
+            <tr>
+                <td>Apostrof 'test'</td>
+                <td>Noktalı virgül; test</td>
+                <td>Yüzde %100</td>
+            </tr>
+            <tr>
+                <td>&lt; &gt; &amp;</td>
+                <td>HTML tags</td>
+                <td>Özel &nbsp; karakterler</td>
+            </tr>
+        </table>
+    </div>
+
+    <script>
+        // Büyük tablo oluştur
+        const bigTableBody = document.getElementById('big-table-body');
+        const names = ['Ahmet', 'Mehmet', 'Ayşe', 'Fatma', 'Can', 'Zeynep'];
+        const surnames = ['Yılmaz', 'Demir', 'Çelik', 'Şahin', 'Kaya', 'Öztürk'];
+        const genders = ['Erkek', 'Kadın'];
+        const diagnoses = ['Grip', 'Baş Ağrısı', 'Mide Bulantısı', 'Kontrol', 'Ateş'];
+        const doctors = ['Dr. Ali Veli', 'Dr. Ayşe Yılmaz', 'Dr. Mehmet Kaya'];
+
+        for (let i = 1; i <= 100; i++) {
+            const tr = document.createElement('tr');
+            const name = names[Math.floor(Math.random() * names.length)];
+            const surname = surnames[Math.floor(Math.random() * surnames.length)];
+            const age = Math.floor(Math.random() * 70) + 18;
+            const gender = genders[Math.floor(Math.random() * genders.length)];
+            const diagnosis = diagnoses[Math.floor(Math.random() * diagnoses.length)];
+            const doctor = doctors[Math.floor(Math.random() * doctors.length)];
+
+            tr.innerHTML = `
+                <td>${String(i).padStart(3, '0')}</td>
+                <td>${name} ${surname}</td>
+                <td>${age}</td>
+                <td>${gender}</td>
+                <td>${diagnosis}</td>
+                <td>${doctor}</td>
+            `;
+            bigTableBody.appendChild(tr);
+        }
+
+        console.log('Test tabloları hazır!');
+        console.log('Toplam 5 test senaryosu yüklendi.');
+    </script>
+</body>
+</html>

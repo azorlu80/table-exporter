@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hastane Yönetim Sistemi Yardımcı Aracı</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: #f5f7fa;
+        }
+
+        /* Toolbar */
+        .toolbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 100;
+        }
+
+        .toolbar h1 {
+            font-size: 18px;
+            font-weight: 600;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: -0.01em;
+        }
+
+        .toolbar .logo {
+            font-size: 24px;
+        }
+
+        .toolbar-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .url-input {
+            flex: 2;
+            padding: 10px 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.95);
+            transition: all 0.2s;
+        }
+
+        .url-input:focus {
+            outline: none;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1.5px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 10px 18px;
+            font-size: 14px;
+            font-weight: 500;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-1px);
+        }
+
+        .btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #667eea;
+            border-color: white;
+            font-weight: 600;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #f8f9ff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        /* Content area */
+        .content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        webview {
+            flex: 1;
+            border: none;
+        }
+
+        /* Instructions overlay */
+        .instructions-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
+            z-index: 50;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s;
+        }
+
+        .instructions-overlay.hidden {
+            display: none;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .instructions-card {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 600px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .instructions-card h2 {
+            font-size: 24px;
+            color: #1e293b;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .instructions-card ol {
+            list-style: none;
+            counter-reset: instruction-counter;
+        }
+
+        .instructions-card li {
+            counter-increment: instruction-counter;
+            padding: 16px 0;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            gap: 16px;
+        }
+
+        .instructions-card li:last-child {
+            border-bottom: none;
+        }
+
+        .instructions-card li::before {
+            content: counter(instruction-counter);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .instructions-card li div {
+            flex: 1;
+        }
+
+        .instructions-card li strong {
+            display: block;
+            color: #334155;
+            margin-bottom: 4px;
+            font-size: 15px;
+        }
+
+        .instructions-card li span {
+            color: #64748b;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .instructions-card .close-btn {
+            margin-top: 24px;
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .instructions-card .close-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Table selection modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(4px);
+            z-index: 200;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s;
+        }
+
+        .modal-overlay.hidden {
+            display: none;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 700px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .modal h3 {
+            font-size: 20px;
+            color: #1e293b;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .table-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .table-item {
+            padding: 16px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-item:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+            transform: translateX(4px);
+        }
+
+        .table-item-info {
+            flex: 1;
+        }
+
+        .table-item-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 4px;
+        }
+
+        .table-item-meta {
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .table-item-badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge-extjs {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-html {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-div {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .modal-actions button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .modal-cancel {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .modal-cancel:hover {
+            background: #e2e8f0;
+        }
+
+        /* Loading */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
+            z-index: 300;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loading-overlay.hidden {
+            display: none;
+        }
+
+        .loading-content {
+            background: white;
+            padding: 40px 60px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid #e2e8f0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 16px;
+            font-weight: 500;
+            color: #334155;
+        }
+
+        /* Status bar */
+        .status-bar {
+            background: white;
+            padding: 10px 24px;
+            border-top: 1px solid #e2e8f0;
+            font-size: 13px;
+            color: #64748b;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .status-dot.loading {
+            background: #f59e0b;
+        }
+    </style>
+</head>
+<body>
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <h1>
+            <span class="logo">🏥</span>
+            <span>Hastane Yönetim Sistemi Yardımcı Aracı</span>
+        </h1>
+
+        <input type="text" class="url-input" id="urlInput"
+               placeholder="URL girin (örn: http://10.7.72.22:8000/YoneticiTakip/Home)"
+               value="http://10.7.72.22:8000/YoneticiTakip/Home">
+
+        <div class="toolbar-group">
+            <button class="btn" onclick="navigateToUrl()">
+                <span>🔄</span> Git
+            </button>
+            <button class="btn" onclick="goBack()">
+                <span>◀</span>
+            </button>
+            <button class="btn" onclick="goForward()">
+                <span>▶</span>
+            </button>
+            <button class="btn" onclick="reloadPage()">
+                <span>↻</span> Yenile
+            </button>
+            <button class="btn btn-primary" onclick="showTableSelection()" id="exportBtn">
+                <span>📊</span> Tabloyu Export Et
+            </button>
+        </div>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+        <!-- Instructions Overlay -->
+        <div class="instructions-overlay" id="instructionsOverlay">
+            <div class="instructions-card">
+                <h2>
+                    <span>📋</span>
+                    Nasıl Kullanılır?
+                </h2>
+                <ol>
+                    <li>
+                        <div>
+                            <strong>Sisteme Giriş Yapın</strong>
+                            <span>Yukarıdaki tarayıcıdan hastane yönetim sistemine normal şekilde giriş yapın</span>
+                        </div>
+                    </li>
+                    <li>
+                        <div>
+                            <strong>Rapor Seçin</strong>
+                            <span>Sol menüden export etmek istediğiniz raporu açın</span>
+                        </div>
+                    </li>
+                    <li>
+                        <div>
+                            <strong>Tablo Yüklensin</strong>
+                            <span>Tablonun tamamen yüklenmesini bekleyin</span>
+                        </div>
+                    </li>
+                    <li>
+                        <div>
+                            <strong>Export Edin</strong>
+                            <span>Üstteki "📊 Tabloyu Export Et" butonuna tıklayın ve tabloyu seçin</span>
+                        </div>
+                    </li>
+                    <li>
+                        <div>
+                            <strong>Dosyayı Kaydedin</strong>
+                            <span>CSV dosyasını kaydedin ve Excel ile açın!</span>
+                        </div>
+                    </li>
+                </ol>
+                <button class="close-btn" onclick="hideInstructions()">
+                    Anladım, Başlayalım! →
+                </button>
+            </div>
+        </div>
+
+        <!-- Webview -->
+        <webview id="webview" src="about:blank"></webview>
+    </div>
+
+    <!-- Table Selection Modal -->
+    <div class="modal-overlay hidden" id="tableModal">
+        <div class="modal">
+            <h3>
+                <span>📊</span>
+                <span id="modalTitle">Hangi Tabloyu Export Etmek İstiyorsunuz?</span>
+            </h3>
+            <div class="table-list" id="tableList"></div>
+            <div class="modal-actions">
+                <button class="modal-cancel" onclick="hideTableModal()">İptal</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay hidden" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <div class="loading-text" id="loadingText">Tablolar aranıyor...</div>
+        </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+        <div class="status-indicator">
+            <div class="status-dot" id="statusDot"></div>
+            <span id="statusText">Hazır</span>
+        </div>
+        <div id="urlDisplay"></div>
+    </div>
+
+    <script src="src/renderer.js"></script>
+</body>
+</html>
