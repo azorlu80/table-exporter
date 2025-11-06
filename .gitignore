@@ -46,7 +46,6 @@ tests/results/*.csv
 tests/results/*.xls
 tests/results/*.xlsx
 
-# Documentation (internal development docs)
+# Documentation (internal development docs - NOT public!)
 CLAUDE.md
-docs/MANUAL_TEST*.md
-docs/MANUEL_TEST*.md
+docs/
