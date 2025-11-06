@@ -111,6 +111,136 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+            padding: 10px 12px;
+            min-width: auto;
+        }
+
+        /* Export Dropdown */
+        .export-dropdown {
+            position: relative;
+            display: flex;
+            gap: 4px;
+        }
+
+        .dropdown-toggle {
+            border-left: 1.5px solid rgba(255, 255, 255, 0.3);
+            border-radius: 0 8px 8px 0;
+        }
+
+        .export-dropdown .btn-primary {
+            border-radius: 8px 0 0 8px;
+        }
+
+        /* Tools Menu */
+        .tools-menu {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.1);
+            min-width: 320px;
+            max-height: 600px;
+            overflow-y: auto;
+            z-index: 1000;
+            animation: slideDown 0.2s ease-out;
+        }
+
+        .tools-menu.hidden {
+            display: none;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .menu-header {
+            padding: 16px 20px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #1a202c;
+            border-bottom: 1px solid #e2e8f0;
+            background: linear-gradient(135deg, #f8f9ff 0%, #f0f4ff 100%);
+            border-radius: 12px 12px 0 0;
+        }
+
+        .menu-section {
+            padding: 12px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .menu-section:last-of-type {
+            border-bottom: none;
+        }
+
+        .menu-section-title {
+            padding: 8px 20px 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #718096;
+        }
+
+        .menu-item {
+            width: 100%;
+            padding: 12px 20px;
+            border: none;
+            background: none;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.15s;
+            color: #2d3748;
+        }
+
+        .menu-item:hover {
+            background: #f7fafc;
+        }
+
+        .menu-item:active {
+            background: #edf2f7;
+        }
+
+        .menu-item span {
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .menu-item-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #2d3748;
+            margin-bottom: 2px;
+        }
+
+        .menu-item-desc {
+            font-size: 12px;
+            color: #718096;
+            line-height: 1.4;
+        }
+
+        .menu-footer {
+            padding: 12px 20px;
+            font-size: 12px;
+            color: #718096;
+            background: #f7fafc;
+            border-radius: 0 0 12px 12px;
+            text-align: center;
+        }
+
         /* Content area */
         .content {
             flex: 1;
@@ -480,9 +610,96 @@
             <button class="btn" onclick="reloadPage()">
                 <span>↻</span> Yenile
             </button>
-            <button class="btn btn-primary" onclick="showTableSelection()" id="exportBtn">
-                <span>📊</span> Tabloyu Export Et
-            </button>
+
+            <!-- Export Tools Dropdown -->
+            <div class="export-dropdown">
+                <button class="btn btn-primary" onclick="showTableSelection()" id="exportBtn">
+                    <span>📊</span> Tablo Export
+                </button>
+                <button class="btn btn-secondary dropdown-toggle" onclick="toggleToolsMenu()" id="toolsToggle">
+                    <span>▼</span>
+                </button>
+
+                <div id="toolsMenu" class="tools-menu hidden">
+                    <div class="menu-header">🛠️ Araçlar Menüsü</div>
+
+                    <div class="menu-section">
+                        <div class="menu-section-title">Otomatik</div>
+                        <button class="menu-item" onclick="autoExport()">
+                            <span>🎯</span>
+                            <div>
+                                <div class="menu-item-title">Otomatik Export</div>
+                                <div class="menu-item-desc">Tüm yöntemleri dene (önerilen)</div>
+                            </div>
+                        </button>
+                    </div>
+
+                    <div class="menu-section">
+                        <div class="menu-section-title">Manuel Seçim</div>
+                        <button class="menu-item" onclick="manualSelector()">
+                            <span>🔧</span>
+                            <div>
+                                <div class="menu-item-title">Manuel Seçici</div>
+                                <div class="menu-item-desc">Tabloya tıklayarak seç</div>
+                            </div>
+                        </button>
+                        <button class="menu-item" onclick="selectionExport()">
+                            <span>✂️</span>
+                            <div>
+                                <div class="menu-item-title">Seçili Metni Export</div>
+                                <div class="menu-item-desc">Kopyaladığın metni CSV yap</div>
+                            </div>
+                        </button>
+                    </div>
+
+                    <div class="menu-section">
+                        <div class="menu-section-title">Özel Modlar</div>
+                        <button class="menu-item" onclick="extjsOnly()">
+                            <span>📊</span>
+                            <div>
+                                <div class="menu-item-title">Sadece ExtJS Grid</div>
+                                <div class="menu-item-desc">Ext.ComponentQuery kullan</div>
+                            </div>
+                        </button>
+                        <button class="menu-item" onclick="htmlOnly()">
+                            <span>📝</span>
+                            <div>
+                                <div class="menu-item-title">Sadece HTML Table</div>
+                                <div class="menu-item-desc">&lt;table&gt; elementleri</div>
+                            </div>
+                        </button>
+                        <button class="menu-item" onclick="divOnly()">
+                            <span>📐</span>
+                            <div>
+                                <div class="menu-item-title">Div-Based Grid</div>
+                                <div class="menu-item-desc">Modern framework tablolar</div>
+                            </div>
+                        </button>
+                    </div>
+
+                    <div class="menu-section">
+                        <div class="menu-section-title">Gelişmiş</div>
+                        <button class="menu-item" onclick="scanAllTables()">
+                            <span>🔍</span>
+                            <div>
+                                <div class="menu-item-title">Tüm Sayfayı Tara</div>
+                                <div class="menu-item-desc">Tüm tabloları listele</div>
+                            </div>
+                        </button>
+                        <button class="menu-item" onclick="exportErrors()">
+                            <span>🐛</span>
+                            <div>
+                                <div class="menu-item-title">Hata Raporu</div>
+                                <div class="menu-item-desc">Ctrl+Shift+E kısayolu</div>
+                            </div>
+                        </button>
+                    </div>
+
+                    <div class="menu-footer">
+                        💡 İpucu: Bir araç çalışmazsa diğerini dene!
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
