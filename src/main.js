@@ -115,16 +115,15 @@ async function saveCSVFile(csv, filename) {
     try {
         logger.info(`Dosya kaydediliyor: ${filename}`);
 
-        // Varsayılan .xlsx uzantısını ayarla
-        const defaultFilename = filename.replace(/\.(csv|xlsx)$/i, '') + '.xlsx';
+        // Uzantısız dosya adı
+        const baseName = filename.replace(/\.(csv|xlsx)$/i, '');
 
         const result = await dialog.showSaveDialog(mainWindow, {
-            title: 'Dosyayı Kaydet',
-            defaultPath: defaultFilename,
+            title: 'Excel veya CSV olarak kaydet',
+            defaultPath: baseName,  // Uzantısız - filter otomatik ekleyecek
             filters: [
-                { name: 'Excel Dosyası', extensions: ['xlsx'] },
-                { name: 'CSV Dosyası', extensions: ['csv'] },
-                { name: 'Tüm Dosyalar', extensions: ['*'] }
+                { name: 'Excel Dosyası (.xlsx)', extensions: ['xlsx'] },
+                { name: 'CSV Dosyası (.csv)', extensions: ['csv'] }
             ],
             properties: ['createDirectory', 'showOverwriteConfirmation']
         });
@@ -141,13 +140,12 @@ async function saveCSVFile(csv, filename) {
         let finalPath = result.filePath;
         let ext = path.extname(finalPath).toLowerCase();
 
-        // Eğer uzantı yoksa veya yanlışsa, doğru uzantıyı ekle
+        // Uzantı kontrolü ve ekleme
         if (!ext || (ext !== '.xlsx' && ext !== '.csv')) {
-            // Filter index'e göre uzantı belirle (0=xlsx, 1=csv)
-            const selectedExt = result.filePath.includes('.csv') ? '.csv' : '.xlsx';
-            finalPath = finalPath + selectedExt;
-            ext = selectedExt;
-            logger.info(`Uzantı eklendi: ${selectedExt}`);
+            // Varsayılan olarak xlsx ekle
+            finalPath = finalPath + '.xlsx';
+            ext = '.xlsx';
+            logger.info(`Varsayılan uzantı eklendi: .xlsx`);
         }
 
         if (ext === '.xlsx') {
