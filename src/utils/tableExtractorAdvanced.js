@@ -160,15 +160,46 @@ const extractionScript = `
     // 2. HTML Table Extractor
     class HTMLTableExtractor {
         static findTables() {
-            return Array.from(document.querySelectorAll('table')).filter(table => {
-                // Gizli tabloları atla
-                const style = window.getComputedStyle(table);
-                if (style.display === 'none' || style.visibility === 'hidden') return false;
+            const tables = [];
 
-                // En az 2 satırlı tablolar
-                const rows = table.querySelectorAll('tr');
-                return rows.length >= 2;
+            // Ana sayfadaki tablolar
+            Array.from(document.querySelectorAll('table')).forEach(table => {
+                const style = window.getComputedStyle(table);
+                if (style.display !== 'none' && style.visibility !== 'hidden') {
+                    const rows = table.querySelectorAll('tr');
+                    if (rows.length >= 2) {
+                        tables.push(table);
+                    }
+                }
             });
+
+            // iFrame içindeki tablolar (same-origin only)
+            try {
+                const iframes = document.querySelectorAll('iframe');
+                iframes.forEach(iframe => {
+                    try {
+                        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                        if (iframeDoc) {
+                            Array.from(iframeDoc.querySelectorAll('table')).forEach(table => {
+                                const style = iframeDoc.defaultView.getComputedStyle(table);
+                                if (style.display !== 'none' && style.visibility !== 'hidden') {
+                                    const rows = table.querySelectorAll('tr');
+                                    if (rows.length >= 2) {
+                                        tables.push(table);
+                                    }
+                                }
+                            });
+                        }
+                    } catch (e) {
+                        // Cross-origin iframe - skip
+                        console.warn('Cannot access iframe (cross-origin):', e.message);
+                    }
+                });
+            } catch (e) {
+                console.warn('iFrame access error:', e);
+            }
+
+            return tables;
         }
 
         static extractTable(table, index = 0) {
