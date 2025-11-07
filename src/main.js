@@ -198,6 +198,9 @@ async function saveAsExcel(csv, filePath) {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Sheet1');
 
+    // DEBUG: CSV preview
+    logger.info('CSV ilk 500 karakter:', csv.substring(0, 500));
+
     // CSV'yi parse et
     const rows = csv.split('\n').map(row => {
         // CSV escaping'i handle et
@@ -226,7 +229,15 @@ async function saveAsExcel(csv, filePath) {
         return cells;
     });
 
-    // Header row (bold)
+    // Border style (kenarlık)
+    const borderStyle = {
+        top: { style: 'thin' },
+        left: { style: 'thin' },
+        bottom: { style: 'thin' },
+        right: { style: 'thin' }
+    };
+
+    // Header row (bold + kenarlık)
     if (rows.length > 0) {
         const headerRow = worksheet.addRow(rows[0]);
         headerRow.font = { bold: true };
@@ -235,11 +246,19 @@ async function saveAsExcel(csv, filePath) {
             pattern: 'solid',
             fgColor: { argb: 'FFE0E0E0' }
         };
+        // Header'a kenarlık ekle
+        headerRow.eachCell(cell => {
+            cell.border = borderStyle;
+        });
     }
 
-    // Data rows
+    // Data rows (kenarlıkla)
     for (let i = 1; i < rows.length; i++) {
-        worksheet.addRow(rows[i]);
+        const dataRow = worksheet.addRow(rows[i]);
+        // Her hücreye kenarlık ekle
+        dataRow.eachCell(cell => {
+            cell.border = borderStyle;
+        });
     }
 
     // Auto-fit columns

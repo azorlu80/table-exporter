@@ -48,7 +48,46 @@ initLanguage().then(() => {
 // Elements (will be initialized after DOM ready)
 let webview, urlInput, urlDisplay, statusText, statusDot, exportBtn;
 let instructionsOverlay, tableModal, loadingOverlay, loadingText, tableList;
+
+// ========================================
+// WEBVIEW CLEANUP SYSTEM
+// ========================================
+let injectedScriptActive = false;  // Inject edilmiş script var mı?
 let currentTables = null;
+
+/**
+ * WebView'da inject edilmiş script'leri temizle
+ * Sayfa değiştiğinde veya yeni navigation'da çağrılır
+ */
+function cleanupInjectedScripts() {
+    if (!injectedScriptActive) return;
+
+    console.log('🧹 Cleaning up injected scripts...');
+
+    try {
+        // WebView'a cleanup script gönder
+        webview.executeJavaScript(`
+            (function() {
+                // Manuel selector highlight'ı temizle
+                const highlights = document.querySelectorAll('[data-tablo-exporter-highlight]');
+                highlights.forEach(el => el.remove());
+
+                // Event listener'ları temizlemek için sayfa yenileme yapılabilir
+                // Ama bu UX'i bozar, o yüzden sadece highlight'ları temizliyoruz
+
+                console.log('✅ Tablo Exporter: Injected scripts cleaned');
+            })();
+        `).catch(err => {
+            console.warn('Cleanup error (expected on navigation):', err.message);
+        });
+
+        injectedScriptActive = false;
+        currentTables = null;
+
+    } catch (error) {
+        console.warn('Cleanup failed:', error);
+    }
+}
 
 // Functions (GLOBAL - HTML onclick'ler için)
 function navigateToUrl() {
@@ -529,6 +568,7 @@ window.manualSelector = function() {
     document.getElementById('toolsMenu').classList.add('hidden');
 
     manualSelectorActive = true;
+    injectedScriptActive = true;  // Cleanup için flag
 
     alert(
         '📍 Manuel Seçici Aktif!\n\n' +
@@ -546,6 +586,7 @@ window.manualSelector = function() {
 
             function createHighlight() {
                 highlightDiv = document.createElement('div');
+                highlightDiv.setAttribute('data-tablo-exporter-highlight', 'true');  // Cleanup için
                 highlightDiv.style.cssText = \`
                     position: absolute;
                     border: 3px solid #667eea;
@@ -598,13 +639,42 @@ window.manualSelector = function() {
 
                     // HTML table
                     if (table.tagName === 'TABLE') {
-                        const headerCells = table.querySelectorAll('thead th, thead td');
-                        headers = Array.from(headerCells).map(th => th.textContent.trim());
+                        const thead = table.querySelector('thead');
+                        headers = [];
+
+                        // Multi-level header: Sadece SON thead row'u al
+                        if (thead) {
+                            const theadRows = thead.querySelectorAll('tr');
+                            if (theadRows.length > 0) {
+                                const lastHeaderRow = theadRows[theadRows.length - 1];
+                                const headerCells = lastHeaderRow.querySelectorAll('th, td');
+
+                                Array.from(headerCells).forEach(th => {
+                                    const text = th.textContent.trim();
+                                    const colspan = parseInt(th.getAttribute('colspan') || '1');
+
+                                    // Colspan varsa tekrar et
+                                    for (let i = 0; i < colspan; i++) {
+                                        headers.push(text);
+                                    }
+                                });
+                            }
+                        }
 
                         const bodyRows = table.querySelectorAll('tbody tr');
-                        rows = Array.from(bodyRows).map(tr =>
-                            Array.from(tr.querySelectorAll('td, th')).map(td => td.textContent.trim())
-                        );
+                        rows = Array.from(bodyRows).map(tr => {
+                            const rowData = [];
+                            Array.from(tr.querySelectorAll('td, th')).forEach(td => {
+                                const text = td.textContent.trim();
+                                const colspan = parseInt(td.getAttribute('colspan') || '1');
+
+                                // Colspan varsa tekrar et
+                                for (let i = 0; i < colspan; i++) {
+                                    rowData.push(text);
+                                }
+                            });
+                            return rowData;
+                        });
                     }
                     // Grid/div based table
                     else {
@@ -896,14 +966,29 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         webview.addEventListener('did-navigate', (e) => {
-            urlInput.value = e.url;
-            urlDisplay.textContent = e.url;
+            // about:blank'i gösterme, boş bırak
+            if (e.url !== 'about:blank') {
+                urlInput.value = e.url;
+                urlDisplay.textContent = e.url;
+            } else {
+                urlInput.value = '';
+                urlDisplay.textContent = '';
+            }
             logInfo(`Navigated to: ${e.url}`);
+
+            // CLEANUP: Sayfa değiştiğinde injected script'leri temizle
+            cleanupInjectedScripts();
         });
 
         webview.addEventListener('did-navigate-in-page', (e) => {
-            urlInput.value = e.url;
-            urlDisplay.textContent = e.url;
+            // about:blank'i gösterme
+            if (e.url !== 'about:blank') {
+                urlInput.value = e.url;
+                urlDisplay.textContent = e.url;
+            }
+
+            // CLEANUP: Sayfa içi navigation'da da temizle
+            cleanupInjectedScripts();
         });
 
         webview.addEventListener('console-message', (e) => {

@@ -173,26 +173,65 @@ const extractionScript = `
 
         static extractTable(table, index = 0) {
             const csv = [];
-            const rows = table.querySelectorAll('tr');
+            const thead = table.querySelector('thead');
+            const tbody = table.querySelector('tbody');
+            const allRows = table.querySelectorAll('tr');
 
-            if (rows.length === 0) {
+            if (allRows.length === 0) {
                 throw new Error('Tablo boş');
             }
 
-            rows.forEach(row => {
+            // HEADER: Multi-level header desteği (sadece SON thead row'u al)
+            if (thead) {
+                const theadRows = thead.querySelectorAll('tr');
+                if (theadRows.length > 0) {
+                    // Son row = en alt seviye başlıklar
+                    const lastHeaderRow = theadRows[theadRows.length - 1];
+                    const rowData = [];
+                    const cells = lastHeaderRow.querySelectorAll('td, th');
+
+                    cells.forEach(cell => {
+                        const text = Utils.cleanText(cell.innerText);
+                        const colspan = parseInt(cell.getAttribute('colspan') || '1');
+
+                        // Colspan varsa tekrar et
+                        for (let i = 0; i < colspan; i++) {
+                            rowData.push(Utils.escapeCSV(text));
+                        }
+                    });
+
+                    if (rowData.length > 0) {
+                        csv.push(rowData.join(','));
+                    }
+                }
+            }
+
+            // BODY ROWS
+            const bodyRows = tbody ? tbody.querySelectorAll('tr') : allRows;
+            bodyRows.forEach(row => {
+                // thead içindeki row'ları skip et
+                if (thead && thead.contains(row)) return;
+
                 const rowData = [];
                 const cells = row.querySelectorAll('td, th');
+
                 cells.forEach(cell => {
                     const text = Utils.cleanText(cell.innerText);
-                    rowData.push(Utils.escapeCSV(text));
+                    const colspan = parseInt(cell.getAttribute('colspan') || '1');
+
+                    // Colspan varsa tekrar et
+                    for (let i = 0; i < colspan; i++) {
+                        rowData.push(Utils.escapeCSV(text));
+                    }
                 });
+
                 if (rowData.length > 0) {
                     csv.push(rowData.join(','));
                 }
             });
 
             // Preview
-            const firstRow = rows[0];
+            const firstRow = allRows[0];
             const previewCells = firstRow ?
                 Array.from(firstRow.querySelectorAll('td, th')).slice(0, 3) : [];
             const preview = previewCells.map(c =>
@@ -201,7 +240,7 @@ const extractionScript = `
 
             return {
                 csv: csv.join('\\n'),
-                rowCount: rows.length,
+                rowCount: allRows.length,
                 columnCount: firstRow ? firstRow.querySelectorAll('td, th').length : 0,
                 title: 'HTML Table ' + (index + 1),
                 preview: preview,
