@@ -36,8 +36,8 @@ function createWindow() {
 
         logger.success('Pencere başarıyla oluşturuldu');
 
-        // ZORUNLU: DevTools aç (Debug için)
-        mainWindow.webContents.openDevTools();
+        // DevTools (F12 veya context menu ile açılabilir)
+        // mainWindow.webContents.openDevTools();
 
         mainWindow.on('closed', () => {
             logger.info('Pencere kapatıldı');

@@ -55,12 +55,23 @@ function navigateToUrl() {
     let url = urlInput.value.trim();
     if (url && url.length > 0) {
         try {
-            // Auto-add https:// if missing (except special protocols)
+            // Auto-add protocol if missing (except special protocols)
             if (!url.startsWith('http://') &&
                 !url.startsWith('https://') &&
                 !url.startsWith('file://') &&
                 !url.startsWith('about:')) {
-                url = 'https://' + url;
+
+                // Smart protocol detection
+                // 1. IP address (10.x.x.x, 192.168.x.x, 172.x.x.x, localhost) → http://
+                // 2. Domain name → https://
+                const isLocalIP = /^(localhost|127\.0\.0\.1|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/i.test(url);
+
+                if (isLocalIP) {
+                    url = 'http://' + url;  // Local → HTTP
+                } else {
+                    url = 'https://' + url; // Public → HTTPS
+                }
+
                 urlInput.value = url; // Update input field
             }
 
