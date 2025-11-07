@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const Logger = require('./utils/logger');
@@ -47,6 +47,41 @@ function createWindow() {
         // Window events
         mainWindow.on('ready-to-show', () => {
             logger.info('Pencere gösterime hazır');
+        });
+
+        // Context menu (sağ tık) - tüm uygulama için
+        mainWindow.webContents.on('context-menu', (event, params) => {
+            const menu = Menu.buildFromTemplate([
+                {
+                    label: 'Kes',
+                    role: 'cut',
+                    enabled: params.editFlags.canCut
+                },
+                {
+                    label: 'Kopyala',
+                    role: 'copy',
+                    enabled: params.editFlags.canCopy
+                },
+                {
+                    label: 'Yapıştır',
+                    role: 'paste',
+                    enabled: params.editFlags.canPaste
+                },
+                { type: 'separator' },
+                {
+                    label: 'Tümünü Seç',
+                    role: 'selectAll'
+                },
+                { type: 'separator' },
+                {
+                    label: 'DevTools',
+                    click: () => {
+                        mainWindow.webContents.toggleDevTools();
+                    }
+                }
+            ]);
+
+            menu.popup();
         });
 
     } catch (error) {
