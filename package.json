@@ -22,13 +22,41 @@
     "electron",
     "desktop-app"
   ],
-  "author": "Ali",
+  "author": {
+    "name": "Ali",
+    "email": "ali@example.com"
+  },
   "license": "MIT",
   "devDependencies": {
-    "electron": "^39.1.0"
+    "electron": "^39.1.0",
+    "electron-builder": "^26.0.12"
   },
   "dependencies": {
     "electron-log": "^5.4.3",
     "winston": "^3.18.3"
+  },
+  "build": {
+    "appId": "com.tablo.exporter",
+    "productName": "Tablo Exporter",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "index.html",
+      "package.json"
+    ],
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "category": "Utility"
+    },
+    "win": {
+      "target": ["portable"],
+      "icon": "build/icon.ico"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "build/icon.icns"
+    }
   }
 }
