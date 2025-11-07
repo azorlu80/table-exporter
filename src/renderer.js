@@ -55,8 +55,11 @@ function navigateToUrl() {
     let url = urlInput.value.trim();
     if (url && url.length > 0) {
         try {
-            // Auto-add https:// if missing
-            if (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('file://')) {
+            // Auto-add https:// if missing (except special protocols)
+            if (!url.startsWith('http://') &&
+                !url.startsWith('https://') &&
+                !url.startsWith('file://') &&
+                !url.startsWith('about:')) {
                 url = 'https://' + url;
                 urlInput.value = url; // Update input field
             }
@@ -864,10 +867,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2. Webview setup
     if (webview) {
         webview.addEventListener('dom-ready', () => {
+            // Latest Chrome User-Agent (2025)
             webview.setUserAgent(
-                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
             );
-            logInfo('WebView User-Agent set to Chrome');
+            logInfo('WebView User-Agent set to Chrome 131');
         });
 
         webview.addEventListener('did-start-loading', () => {
