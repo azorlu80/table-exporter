@@ -578,11 +578,32 @@ window.manualSelector = function() {
 
     setStatus('Tabloya tıklayın...', 'loading');
 
-    // WebView'a script inject et - Promise döndür
+    // WebView'a script inject et (ana sayfa + iframe'ler) - Promise döndür
     webview.executeJavaScript(`
         new Promise((resolve) => {
             let highlightedElement = null;
             let highlightDiv = null;
+
+            // iFrame'lere de inject et (same-origin)
+            function injectToIframes() {
+                const iframes = document.querySelectorAll('iframe');
+                iframes.forEach(iframe => {
+                    try {
+                        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                        if (iframeDoc && iframeDoc !== document) {
+                            const script = iframeDoc.createElement('script');
+                            script.textContent = '(' + function() {
+                                // iframe içinde de aynı logic
+                                console.log('Manuel selector iframe içinde aktif!');
+                            }.toString() + ')()';
+                            iframeDoc.head.appendChild(script);
+                        }
+                    } catch (e) {
+                        console.warn('Cannot inject to iframe (cross-origin):', e.message);
+                    }
+                });
+            }
+            injectToIframes();
 
             function createHighlight() {
                 highlightDiv = document.createElement('div');
@@ -613,7 +634,7 @@ window.manualSelector = function() {
             }
 
             document.addEventListener('mouseover', (e) => {
-                const table = e.target.closest('table, [role="grid"], .grid, .x-grid');
+                const table = e.target.closest('table, [role="grid"], .grid, .x-grid, .ui-jqgrid-btable');
                 if (table) {
                     highlightedElement = table;
                     updateHighlight(table);
@@ -625,7 +646,23 @@ window.manualSelector = function() {
             });
 
             document.addEventListener('click', (e) => {
-                const table = e.target.closest('table, [role="grid"], .grid, .x-grid');
+                // En yakın table'ı bul (jqGrid desteği ile)
+                let table = e.target.closest('table, [role="grid"], .grid, .x-grid, .ui-jqgrid-btable');
+
+                // Nested table varsa, en dıştaki parent table'ı bul
+                if (table) {
+                    let parentTable = table.parentElement;
+                    while (parentTable) {
+                        const outerTable = parentTable.closest('table, [role="grid"], .grid, .x-grid');
+                        if (outerTable && outerTable !== table) {
+                            table = outerTable;
+                            parentTable = table.parentElement;
+                        } else {
+                            break;
+                        }
+                    }
+                }
+
                 if (table) {
                     e.preventDefault();
                     e.stopPropagation();
