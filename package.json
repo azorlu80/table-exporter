@@ -33,6 +33,7 @@
   },
   "dependencies": {
     "electron-log": "^5.4.3",
+    "exceljs": "^4.4.0",
     "winston": "^3.18.3"
   },
   "build": {
@@ -47,11 +48,16 @@
       "package.json"
     ],
     "linux": {
-      "target": ["AppImage", "deb"],
+      "target": [
+        "AppImage",
+        "deb"
+      ],
       "category": "Utility"
     },
     "win": {
-      "target": ["portable"],
+      "target": [
+        "portable"
+      ],
       "icon": "build/icon.ico"
     },
     "mac": {

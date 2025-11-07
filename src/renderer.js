@@ -292,7 +292,7 @@ async function exportTable(table) {
             String(now.getHours()).padStart(2, '0') + '-' +
             String(now.getMinutes()).padStart(2, '0');
 
-        const filename = `tablo_${timestamp}.csv`;
+        const filename = `tablo_${timestamp}.xlsx`;  // Default: Excel
 
         // IPC ile main process'e gönder
         ipcRenderer.send('save-csv', {

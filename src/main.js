@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const ExcelJS = require('exceljs');
 const Logger = require('./utils/logger');
 const { t, getCurrentLanguage } = require('./utils/i18n');
 
@@ -108,25 +109,28 @@ function createWindow() {
 }
 
 /**
- * CSV dosyasını kaydet
+ * CSV/Excel dosyasını kaydet
  */
 async function saveCSVFile(csv, filename) {
     try {
-        logger.info(`CSV kaydediliyor: ${filename}`);
+        logger.info(`Dosya kaydediliyor: ${filename}`);
+
+        // Varsayılan .xlsx uzantısını ayarla
+        const defaultFilename = filename.replace(/\.(csv|xlsx)$/i, '') + '.xlsx';
 
         const result = await dialog.showSaveDialog(mainWindow, {
-            title: 'CSV Dosyasını Kaydet',
-            defaultPath: filename,
+            title: 'Dosyayı Kaydet',
+            defaultPath: defaultFilename,
             filters: [
+                { name: 'Excel Dosyası', extensions: ['xlsx'] },
                 { name: 'CSV Dosyası', extensions: ['csv'] },
-                { name: 'Excel Dosyası', extensions: ['xls'] },
                 { name: 'Tüm Dosyalar', extensions: ['*'] }
             ],
-            properties: ['createDirectory']
+            properties: ['createDirectory', 'showOverwriteConfirmation']
         });
 
         if (result.canceled) {
-            logger.warn('CSV kaydetme iptal edildi');
+            logger.warn('Kaydetme iptal edildi');
             return { success: false, canceled: true };
         }
 
@@ -134,24 +138,41 @@ async function saveCSVFile(csv, filename) {
             throw new Error('Dosya yolu alınamadı');
         }
 
-        // UTF-8 BOM ekle (Excel için Türkçe karakter desteği)
-        const BOM = '\ufeff';
-        const content = BOM + csv;
+        let finalPath = result.filePath;
+        let ext = path.extname(finalPath).toLowerCase();
 
-        fs.writeFileSync(result.filePath, content, 'utf8');
+        // Eğer uzantı yoksa veya yanlışsa, doğru uzantıyı ekle
+        if (!ext || (ext !== '.xlsx' && ext !== '.csv')) {
+            // Filter index'e göre uzantı belirle (0=xlsx, 1=csv)
+            const selectedExt = result.filePath.includes('.csv') ? '.csv' : '.xlsx';
+            finalPath = finalPath + selectedExt;
+            ext = selectedExt;
+            logger.info(`Uzantı eklendi: ${selectedExt}`);
+        }
 
-        const stats = fs.statSync(result.filePath);
+        if (ext === '.xlsx') {
+            // Excel export
+            await saveAsExcel(csv, finalPath);
+        } else {
+            // CSV export (default)
+            const BOM = '\ufeff';
+            const content = BOM + csv;
+            fs.writeFileSync(finalPath, content, 'utf8');
+        }
 
-        logger.success(`CSV başarıyla kaydedildi: ${result.filePath} (${stats.size} bytes)`);
+        const stats = fs.statSync(finalPath);
+
+        logger.success(`Dosya başarıyla kaydedildi: ${finalPath} (${stats.size} bytes)`);
 
         return {
             success: true,
-            path: result.filePath,
-            size: stats.size
+            path: finalPath,
+            size: stats.size,
+            format: ext === '.xlsx' ? 'Excel' : 'CSV'
         };
 
     } catch (error) {
-        console.error('❌ CSV SAVE ERROR:', {
+        console.error('❌ FILE SAVE ERROR:', {
             errorMessage: error.message,
             errorCode: error.code,
             stack: error.stack?.split('\n')[0],
@@ -159,7 +180,7 @@ async function saveCSVFile(csv, filename) {
             csvLength: csv ? csv.length : 0
         });
 
-        logger.error('CSV kaydetme hatası', error, {
+        logger.error('Dosya kaydetme hatası', error, {
             filename,
             csvLength: csv ? csv.length : 0,
             operation: 'saveCSVFile'
@@ -167,9 +188,77 @@ async function saveCSVFile(csv, filename) {
 
         return {
             success: false,
-            error: error.message || 'CSV dosyası kaydedilemedi'
+            error: error.message || 'Dosya kaydedilemedi'
         };
     }
+}
+
+/**
+ * Excel dosyası oluştur
+ */
+async function saveAsExcel(csv, filePath) {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Sheet1');
+
+    // CSV'yi parse et
+    const rows = csv.split('\n').map(row => {
+        // CSV escaping'i handle et
+        const cells = [];
+        let currentCell = '';
+        let insideQuotes = false;
+
+        for (let i = 0; i < row.length; i++) {
+            const char = row[i];
+
+            if (char === '"') {
+                if (insideQuotes && row[i + 1] === '"') {
+                    currentCell += '"';
+                    i++;
+                } else {
+                    insideQuotes = !insideQuotes;
+                }
+            } else if (char === ',' && !insideQuotes) {
+                cells.push(currentCell);
+                currentCell = '';
+            } else {
+                currentCell += char;
+            }
+        }
+        cells.push(currentCell);
+        return cells;
+    });
+
+    // Header row (bold)
+    if (rows.length > 0) {
+        const headerRow = worksheet.addRow(rows[0]);
+        headerRow.font = { bold: true };
+        headerRow.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFE0E0E0' }
+        };
+    }
+
+    // Data rows
+    for (let i = 1; i < rows.length; i++) {
+        worksheet.addRow(rows[i]);
+    }
+
+    // Auto-fit columns
+    worksheet.columns.forEach(column => {
+        let maxLength = 0;
+        column.eachCell({ includeEmpty: true }, cell => {
+            const cellLength = cell.value ? cell.value.toString().length : 0;
+            if (cellLength > maxLength) {
+                maxLength = cellLength;
+            }
+        });
+        column.width = Math.min(maxLength + 2, 50);
+    });
+
+    // Kaydet
+    await workbook.xlsx.writeFile(filePath);
+    logger.info(`Excel dosyası oluşturuldu: ${filePath}`);
 }
 
 /**
