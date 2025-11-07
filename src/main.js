@@ -36,10 +36,8 @@ function createWindow() {
 
         logger.success('Pencere başarıyla oluşturuldu');
 
-        // Development modda DevTools aç
-        if (process.env.NODE_ENV === 'development') {
-            mainWindow.webContents.openDevTools();
-        }
+        // ZORUNLU: DevTools aç (Debug için)
+        mainWindow.webContents.openDevTools();
 
         mainWindow.on('closed', () => {
             logger.info('Pencere kapatıldı');

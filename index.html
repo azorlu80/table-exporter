@@ -744,14 +744,14 @@
                         </div>
                     </li>
                 </ol>
-                <button class="close-btn" onclick="hideInstructions()">
+                <button class="close-btn" id="closeInstructionsBtn">
                     Anladım, Başlayalım! →
                 </button>
             </div>
         </div>
 
         <!-- Webview -->
-        <webview id="webview" src="about:blank"></webview>
+        <webview id="webview" src="about:blank" partition="persist:table-exporter" webpreferences="allowRunningInsecureContent=yes, javascript=yes, contextIsolation=no, devTools=yes"></webview>
     </div>
 
     <!-- Table Selection Modal -->

@@ -1,5 +1,6 @@
 const { ipcRenderer } = require('electron');
-const { extractionScript } = require('./utils/tableExtractorAdvanced');
+const path = require('path');
+const { extractionScript } = require(path.join(__dirname, 'src', 'utils', 'tableExtractorAdvanced'));
 
 // ========================================
 // I18N (INTERNATIONALIZATION)
@@ -44,96 +45,50 @@ initLanguage().then(() => {
     console.log('✅ i18n ready, language:', currentLanguage);
 });
 
-// Elements
-const webview = document.getElementById('webview');
-const urlInput = document.getElementById('urlInput');
-const urlDisplay = document.getElementById('urlDisplay');
-const statusText = document.getElementById('statusText');
-const statusDot = document.getElementById('statusDot');
-const exportBtn = document.getElementById('exportBtn');
-const instructionsOverlay = document.getElementById('instructionsOverlay');
-const tableModal = document.getElementById('tableModal');
-const loadingOverlay = document.getElementById('loadingOverlay');
-const loadingText = document.getElementById('loadingText');
-const tableList = document.getElementById('tableList');
-
+// Elements (will be initialized after DOM ready)
+let webview, urlInput, urlDisplay, statusText, statusDot, exportBtn;
+let instructionsOverlay, tableModal, loadingOverlay, loadingText, tableList;
 let currentTables = null;
 
-// Webview User Agent (Normal Chrome tarayıcı gibi görün)
-webview.addEventListener('dom-ready', () => {
-    webview.setUserAgent(
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-    );
-    logInfo('WebView User-Agent set to Chrome');
-});
-
-// Initial setup
-setTimeout(() => {
-    navigateToUrl();
-}, 500);
-
-// Webview event listeners
-webview.addEventListener('did-start-loading', () => {
-    setStatus('Yükleniyor...', 'loading');
-    exportBtn.disabled = true;
-});
-
-webview.addEventListener('did-stop-loading', () => {
-    setStatus('Hazır', 'ready');
-    exportBtn.disabled = false;
-});
-
-webview.addEventListener('did-navigate', (e) => {
-    urlInput.value = e.url;
-    urlDisplay.textContent = e.url;
-    logInfo(`Navigated to: ${e.url}`);
-});
-
-webview.addEventListener('did-navigate-in-page', (e) => {
-    urlInput.value = e.url;
-    urlDisplay.textContent = e.url;
-});
-
-webview.addEventListener('console-message', (e) => {
-    console.log('WebView Console:', e.message);
-});
-
-// URL input Enter key
-urlInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        navigateToUrl();
-    }
-});
-
-// Functions
+// Functions (GLOBAL - HTML onclick'ler için)
 function navigateToUrl() {
     const url = urlInput.value.trim();
     if (url) {
-        webview.src = url;
-        setStatus('Yükleniyor...', 'loading');
-        logInfo(`Navigating to: ${url}`);
+        try {
+            webview.loadURL(url);
+            setStatus('Yükleniyor...', 'loading');
+            logInfo(`Navigating to: ${url}`);
+        } catch (error) {
+            console.error('Navigate error:', error);
+            webview.src = url;
+        }
     }
 }
+window.navigateToUrl = navigateToUrl;
 
 function goBack() {
     if (webview.canGoBack()) {
         webview.goBack();
     }
 }
+window.goBack = goBack;
 
 function goForward() {
     if (webview.canGoForward()) {
         webview.goForward();
     }
 }
+window.goForward = goForward;
 
 function reloadPage() {
     webview.reload();
 }
+window.reloadPage = reloadPage;
 
 function hideInstructions() {
     instructionsOverlay.classList.add('hidden');
 }
+window.hideInstructions = hideInstructions;
 
 function setStatus(text, type = 'ready') {
     statusText.textContent = text;
@@ -152,13 +107,13 @@ function hideLoading() {
     loadingOverlay.classList.add('hidden');
 }
 
-function hideTableModal() {
+window.hideTableModal = function() {
     tableModal.classList.add('hidden');
     currentTables = null;
-}
+};
 
 // Table selection
-async function showTableSelection() {
+window.showTableSelection = async function() {
     try {
         showLoading('Tablolar taranıyor...');
         exportBtn.disabled = true;
@@ -321,27 +276,30 @@ async function exportTable(table) {
         ipcRenderer.once('save-csv-reply', (_event, response) => {
             hideLoading();
 
-            if (response.success) {
-                const message =
-                    `✅ Tablo başarıyla kaydedildi!\\n\\n` +
-                    `📋 Tablo: ${table.title}\\n` +
-                    `📊 Satır: ${table.rowCount}\\n` +
-                    `📊 Sütun: ${table.columnCount}\\n` +
-                    `💾 Dosya: ${response.size} bytes\\n\\n` +
-                    `📂 Konum:\\n${response.path}\\n\\n` +
-                    `💡 Excel ile açabilirsiniz!`;
+            // setTimeout ile alert'i async yap (UI update olsun önce)
+            setTimeout(() => {
+                if (response.success) {
+                    const message =
+                        `✅ Tablo başarıyla kaydedildi!\\n\\n` +
+                        `📋 Tablo: ${table.title}\\n` +
+                        `📊 Satır: ${table.rowCount}\\n` +
+                        `📊 Sütun: ${table.columnCount}\\n` +
+                        `💾 Dosya: ${response.size} bytes\\n\\n` +
+                        `📂 Konum:\\n${response.path}\\n\\n` +
+                        `💡 Excel ile açabilirsiniz!`;
 
-                alert(message);
-                setStatus('Export başarılı', 'ready');
-                logInfo(`Export successful: ${response.path}`);
-            } else if (response.canceled) {
-                setStatus('Export iptal edildi', 'ready');
-                logInfo('Export canceled by user');
-            } else {
-                alert(`❌ Kaydetme hatası:\\n\\n${response.error || 'Bilinmeyen hata'}`);
-                setStatus('Hata oluştu', 'ready');
-                logError('Save error', response.error);
-            }
+                    alert(message);
+                    setStatus('Export başarılı', 'ready');
+                    logInfo(`Export successful: ${response.path}`);
+                } else if (response.canceled) {
+                    setStatus('Export iptal edildi', 'ready');
+                    logInfo('Export canceled by user');
+                } else {
+                    alert(`❌ Kaydetme hatası:\\n\\n${response.error || 'Bilinmeyen hata'}`);
+                    setStatus('Hata oluştu', 'ready');
+                    logError('Save error', response.error);
+                }
+            }, 100); // 100ms bekle - UI update olsun
         });
 
     } catch (error) {
@@ -452,7 +410,7 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-function exportErrors() {
+window.exportErrors = function() {
     try {
         if (errorHistory.length === 0) {
             alert('✅ Hiç hata kaydı yok!\n\nUygulama sorunsuz çalışıyor.');
@@ -512,10 +470,10 @@ function exportErrors() {
 // ========================================
 
 // Menü toggle
-function toggleToolsMenu() {
+window.toggleToolsMenu = function() {
     const menu = document.getElementById('toolsMenu');
     menu.classList.toggle('hidden');
-}
+};
 
 // Menü dışına tıklanınca kapat
 document.addEventListener('click', (e) => {
@@ -531,15 +489,15 @@ document.addEventListener('click', (e) => {
 });
 
 // 1. Otomatik Export (mevcut fonksiyon)
-function autoExport() {
+window.autoExport = function() {
     document.getElementById('toolsMenu').classList.add('hidden');
-    showTableSelection();
-}
+    window.showTableSelection();
+};
 
 // 2. Manuel Seçici
 let manualSelectorActive = false;
 
-function manualSelector() {
+window.manualSelector = function() {
     document.getElementById('toolsMenu').classList.add('hidden');
 
     manualSelectorActive = true;
@@ -552,9 +510,9 @@ function manualSelector() {
 
     setStatus('Tabloya tıklayın...', 'loading');
 
-    // WebView'a script inject et
+    // WebView'a script inject et - Promise döndür
     webview.executeJavaScript(`
-        (function() {
+        new Promise((resolve) => {
             let highlightedElement = null;
             let highlightDiv = null;
 
@@ -603,24 +561,92 @@ function manualSelector() {
                     e.preventDefault();
                     e.stopPropagation();
 
-                    // Tablo datasını extract et
-                    const tableData = {
-                        selected: true,
-                        element: table.outerHTML.substring(0, 500) // Preview
-                    };
-
-                    console.log('✅ Manual table selected', tableData);
-                    alert('✅ Tablo seçildi! Şimdi export ediliyor...');
-
-                    // Cleanup
+                    // Cleanup highlight
                     if (highlightDiv) highlightDiv.remove();
 
-                    return false;
+                    // Extract table data
+                    let headers = [];
+                    let rows = [];
+
+                    // HTML table
+                    if (table.tagName === 'TABLE') {
+                        const headerCells = table.querySelectorAll('thead th, thead td');
+                        headers = Array.from(headerCells).map(th => th.textContent.trim());
+
+                        const bodyRows = table.querySelectorAll('tbody tr');
+                        rows = Array.from(bodyRows).map(tr =>
+                            Array.from(tr.querySelectorAll('td, th')).map(td => td.textContent.trim())
+                        );
+                    }
+                    // Grid/div based table
+                    else {
+                        // Simple extraction for div grids
+                        const allRows = table.querySelectorAll('[role="row"], .row, .x-grid-row');
+                        if (allRows.length > 0) {
+                            rows = Array.from(allRows).map(row => {
+                                const cells = row.querySelectorAll('[role="cell"], .cell, .x-grid-cell');
+                                return Array.from(cells).map(cell => cell.textContent.trim());
+                            });
+                            // First row as header if available
+                            if (rows.length > 0) {
+                                headers = rows[0];
+                                rows = rows.slice(1);
+                            }
+                        }
+                    }
+
+                    // Resolve Promise with table data
+                    resolve({ headers, rows });
                 }
             }, true);
-        })();
-    `).then(() => {
-        logInfo('Manual selector activated');
+        });
+    `).then(async (result) => {
+        if (!result || !result.headers || !result.rows) {
+            alert('❌ Tablo seçilemedi!');
+            setStatus('Hata', 'ready');
+            return;
+        }
+
+        logInfo('Manual table selected');
+
+        // CSV formatına çevir
+        const csvRows = [];
+
+        // Header
+        if (result.headers.length > 0) {
+            csvRows.push(result.headers.map(h => {
+                if (h.includes(',') || h.includes('"') || h.includes('\n')) {
+                    return `"${h.replace(/"/g, '""')}"`;
+                }
+                return h;
+            }).join(','));
+        }
+
+        // Rows
+        result.rows.forEach(row => {
+            csvRows.push(row.map(cell => {
+                const str = String(cell);
+                if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+                    return `"${str.replace(/"/g, '""')}"`;
+                }
+                return str;
+            }).join(','));
+        });
+
+        const csv = csvRows.join('\n');
+
+        // Table object oluştur (exportTable için)
+        const tableObj = {
+            title: 'Manuel Seçim',
+            type: 'manual',
+            rowCount: result.rows.length,
+            columnCount: result.headers.length || (result.rows[0]?.length || 0),
+            csv: csv
+        };
+
+        // Export et
+        await exportTable(tableObj);
+
     }).catch(error => {
         console.error('❌ MANUAL SELECTOR ERROR:', error);
         alert('❌ Manuel seçici başlatılamadı!');
@@ -629,7 +655,7 @@ function manualSelector() {
 }
 
 // 3. Seçili Metni Export
-async function selectionExport() {
+window.selectionExport = async function() {
     document.getElementById('toolsMenu').classList.add('hidden');
 
     try {
@@ -706,26 +732,26 @@ async function selectionExport() {
 }
 
 // 4-6. Özel Modlar (ExtJS, HTML, Div only)
-async function extjsOnly() {
+window.extjsOnly = async function() {
     document.getElementById('toolsMenu').classList.add('hidden');
     // TODO: Sadece ExtJS grid'leri ara
     alert('🚧 ExtJS Only modu yakında!\n\nŞimdilik "Otomatik Export" kullanın.');
-}
+};
 
-async function htmlOnly() {
+window.htmlOnly = async function() {
     document.getElementById('toolsMenu').classList.add('hidden');
     // TODO: Sadece HTML table'ları ara
     alert('🚧 HTML Only modu yakında!\n\nŞimdilik "Otomatik Export" kullanın.');
-}
+};
 
-async function divOnly() {
+window.divOnly = async function() {
     document.getElementById('toolsMenu').classList.add('hidden');
     // TODO: Sadece div-based grid'leri ara
     alert('🚧 Div-Based Grid modu yakında!\n\nŞimdilik "Otomatik Export" kullanın.');
-}
+};
 
 // 7. Tüm Sayfayı Tara
-async function scanAllTables() {
+window.scanAllTables = async function() {
     document.getElementById('toolsMenu').classList.add('hidden');
 
     try {
@@ -805,5 +831,78 @@ async function scanAllTables() {
         alert('❌ Sayfa taranamadı!');
     }
 }
+
+// DOM hazır olunca HER ŞEYİ initialize et
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Initialize all DOM elements
+    webview = document.getElementById('webview');
+    urlInput = document.getElementById('urlInput');
+    urlDisplay = document.getElementById('urlDisplay');
+    statusText = document.getElementById('statusText');
+    statusDot = document.getElementById('statusDot');
+    exportBtn = document.getElementById('exportBtn');
+    instructionsOverlay = document.getElementById('instructionsOverlay');
+    tableModal = document.getElementById('tableModal');
+    loadingOverlay = document.getElementById('loadingOverlay');
+    loadingText = document.getElementById('loadingText');
+    tableList = document.getElementById('tableList');
+
+    // 2. Webview setup
+    if (webview) {
+        webview.addEventListener('dom-ready', () => {
+            webview.setUserAgent(
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            );
+            logInfo('WebView User-Agent set to Chrome');
+        });
+
+        webview.addEventListener('did-start-loading', () => {
+            setStatus('Yükleniyor...', 'loading');
+            exportBtn.disabled = true;
+        });
+
+        webview.addEventListener('did-stop-loading', () => {
+            setStatus('Hazır', 'ready');
+            exportBtn.disabled = false;
+        });
+
+        webview.addEventListener('did-navigate', (e) => {
+            urlInput.value = e.url;
+            urlDisplay.textContent = e.url;
+            logInfo(`Navigated to: ${e.url}`);
+        });
+
+        webview.addEventListener('did-navigate-in-page', (e) => {
+            urlInput.value = e.url;
+            urlDisplay.textContent = e.url;
+        });
+
+        webview.addEventListener('console-message', (e) => {
+            console.log('WebView Console:', e.message);
+        });
+    }
+
+    // 3. URL input Enter key
+    if (urlInput) {
+        urlInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                navigateToUrl();
+            }
+        });
+    }
+
+    // 4. Close instructions button
+    const closeBtn = document.getElementById('closeInstructionsBtn');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            hideInstructions();
+        });
+    }
+
+    // 5. Initial setup
+    setTimeout(() => {
+        navigateToUrl(); // about:blank yükle
+    }, 500);
+});
 
 logInfo('Renderer process started');
