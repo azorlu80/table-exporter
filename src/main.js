@@ -49,6 +49,13 @@ function createWindow() {
             logger.info('Pencere gösterime hazır');
         });
 
+        // SSL certificate errors bypass (local servers için)
+        mainWindow.webContents.on('certificate-error', (event, url, error, certificate, callback) => {
+            event.preventDefault();
+            callback(true); // Trust the certificate
+            logger.warn(`SSL certificate error ignored for: ${url}`);
+        });
+
         // Context menu (sağ tık) - tüm uygulama için
         mainWindow.webContents.on('context-menu', (event, params) => {
             const menu = Menu.buildFromTemplate([
