@@ -52,15 +52,29 @@ let currentTables = null;
 
 // Functions (GLOBAL - HTML onclick'ler için)
 function navigateToUrl() {
-    const url = urlInput.value.trim();
-    if (url) {
+    let url = urlInput.value.trim();
+    if (url && url.length > 0) {
         try {
+            // Auto-add https:// if missing
+            if (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('file://')) {
+                url = 'https://' + url;
+                urlInput.value = url; // Update input field
+            }
+
             webview.loadURL(url);
             setStatus('Yükleniyor...', 'loading');
             logInfo(`Navigating to: ${url}`);
         } catch (error) {
             console.error('Navigate error:', error);
-            webview.src = url;
+            alert('❌ Geçersiz URL!\n\nLütfen geçerli bir URL girin.');
+            setStatus('Hata', 'error');
+        }
+    } else {
+        // Default: about:blank
+        try {
+            webview.loadURL('about:blank');
+        } catch (error) {
+            console.error('Default navigation error:', error);
         }
     }
 }
@@ -882,13 +896,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 3. URL input Enter key
+    // 3. URL input Enter key + Context menu
     if (urlInput) {
         urlInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 navigateToUrl();
             }
         });
+
+        // Right-click context menu for URL input
+        // Note: Native context menu (cut/copy/paste) works by default in Electron
+        // We don't need to prevent default behavior for input elements
     }
 
     // 4. Close instructions button
