@@ -173,31 +173,41 @@ const extractionScript = `
                 }
             });
 
-            // iFrame içindeki tablolar (same-origin only)
-            try {
-                const iframes = document.querySelectorAll('iframe');
-                iframes.forEach(iframe => {
-                    try {
-                        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                        if (iframeDoc) {
-                            Array.from(iframeDoc.querySelectorAll('table')).forEach(table => {
-                                const style = iframeDoc.defaultView.getComputedStyle(table);
-                                if (style.display !== 'none' && style.visibility !== 'hidden') {
-                                    const rows = table.querySelectorAll('tr');
-                                    if (rows.length >= 2) {
-                                        tables.push(table);
+            // iFrame içindeki tablolar (recursive, same-origin only)
+            function scanIframes(doc, depth = 0) {
+                if (depth > 5) return; // Max 5 seviye derinlik
+
+                try {
+                    const iframes = doc.querySelectorAll('iframe');
+                    iframes.forEach(iframe => {
+                        try {
+                            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                            if (iframeDoc && iframeDoc !== doc) {
+                                // Bu iframe'deki tabloları al
+                                Array.from(iframeDoc.querySelectorAll('table')).forEach(table => {
+                                    const style = iframeDoc.defaultView.getComputedStyle(table);
+                                    if (style.display !== 'none' && style.visibility !== 'hidden') {
+                                        const rows = table.querySelectorAll('tr');
+                                        if (rows.length >= 2) {
+                                            tables.push(table);
+                                        }
                                     }
-                                }
-                            });
+                                });
+
+                                // Nested iframe'leri de tara (recursive)
+                                scanIframes(iframeDoc, depth + 1);
+                            }
+                        } catch (e) {
+                            // Cross-origin iframe - skip
+                            console.warn('Cannot access iframe at depth ' + depth + ' (cross-origin):', e.message);
                         }
-                    } catch (e) {
-                        // Cross-origin iframe - skip
-                        console.warn('Cannot access iframe (cross-origin):', e.message);
-                    }
-                });
-            } catch (e) {
-                console.warn('iFrame access error:', e);
+                    });
+                } catch (e) {
+                    console.warn('iFrame scan error:', e);
+                }
             }
+
+            scanIframes(document);
 
             return tables;
         }
